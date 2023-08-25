@@ -1,10 +1,56 @@
 import data
 import random
-from text import divider, intro, agent
+from text import divider, intro, agent, victory, defeat
 import time
 
 class Game:
+    """
+Class that creates an instance of the game
 
+Attributes
+--------------------------------------------
+- self.gameover: Bool
+Whether or not the game is over
+
+- self.win: Bool
+Whether or not the player won
+
+- self.map: dict
+A dictionary, the name of the room is the key, the room
+itself is the value
+
+- self.player: player object
+An object containing attributes related to the player
+
+- self.player_cooldown: int
+Cooldown for the player's ability
+
+- self.player_pos: room object
+the room the player is currently in
+
+- self.reyna_pos: room object
+the room the monster is currently in
+
+
+Methods
+--------------------------------------------
++ self.intro(self) -> None:
++ self.countdown(self) -> None:
++ self.prompt(self, options: list, message: str, cancel: bool) -> int:
++ self.agent_select(self, choice: int) -> str:
++ self.map_select(self, choice: int) -> None:
++ self.initialise(self, agent: str) -> None:
++ self.desc(self) -> None:
++ self.ability(self) -> None:
+- self.jett(self) -> None:
+- self.sova(self, choice: int) -> None:
+- self.omen(self, choice: int) -> None:
+- self.sage(self, choice: int) -> None:
++ self.move(self, choice: int) -> int:
++ self.reyna_turn(self) -> None:
++ self.update(self) -> None:
++ self.run(self):
+    """
     def __init__(self):
         self.gameover = False
         self.win = False
@@ -19,7 +65,7 @@ class Game:
     agent_descriptions = agent
     
     agents = ["Jett", "Sova", "Omen", "Sage"]
-    maps = ["Ascent", "Haven", "Breeze"]
+    maps = ["Ascent", "Haven", "Bind"]
 
     def countdown(self) -> None:
         """
@@ -51,10 +97,10 @@ class Game:
             accept = [str(x) for x in range(1, len(options)+2)]
         else:
             accept = [str(x) for x in range(1, len(options)+1)]
-        choice = input("Choose a number: ")
+        choice = input("Pick a number: ")
         while choice not in accept:
             print("Invalid input")
-            choice = input("Choose a number: ")
+            choice = input("Pick a number: ")
         print(divider)
         if int(choice) == len(options) + 1:
             return -1
@@ -79,7 +125,7 @@ class Game:
         elif choice == 1:
             self.map = data.make_map("haven")
         elif choice == 2:
-            self.map = data.make_map("breeze")
+            self.map = data.make_map("bind")
     
     def initialise(self, agent: str) -> None:
         """
@@ -88,7 +134,6 @@ class Game:
         sets cooldown for player
         sets starting positions for reyna and player
         """
-            
         creatures = 5
         orbs = 8
         rooms = list(self.map.keys())
@@ -125,7 +170,7 @@ class Game:
             print(path)
         print()
         if self.player_cooldown == 0:
-            print("You can use your ability.")
+            print("ABILITY READY!")
         else:
             print(f"{self.player_cooldown} turns until you can use your ability.")
         print(divider)
@@ -146,7 +191,7 @@ class Game:
             else:
                 print("Jett's ability cannot be manually activated\n")
         else:
-            print("Your ability is on cooldown.")
+            print("ABILITY NOT READY YET!")
     
     def jett(self) -> None:
         """
@@ -156,7 +201,7 @@ class Game:
         """
         paths = self.player_pos.get_paths()
         outcome = random.choice(paths)
-        print("You are about to die. You used dash to escape.")
+        print("You were about to die. You used dash to escape.")
         print(f"You are now in {outcome}.")
         self.player_cooldown = 999
         self.player_pos = self.map[outcome]
@@ -235,7 +280,7 @@ class Game:
         returns None
         """
         if self.reyna_pos == self.player_pos:
-            print("Reyna has found you!")
+            print("\nReyna has found you!")
             if self.player.get_hp() >= 300:
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
@@ -308,6 +353,6 @@ class Game:
                 self.reyna_turn()
                 self.update()
         if self.win:
-            print("VICTORY")
+            print(victory)
         else:
-            print("DEFEAT")
+            print(defeat)
