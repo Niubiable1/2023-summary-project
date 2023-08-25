@@ -13,6 +13,8 @@ There is still enemy utility scattered around the map, each piece you encounter 
 
 You also have an agent ability, which will hopefully give you an edge over this no-lifer. Using an ability does not pass your turn. 
 
+You are on attack, so you have a time limit of 50 rounds to find and kill Reyna in order to win.
+
 Remember, CLUTCH OR GAE!!
 
 {divider}"""
@@ -49,3 +51,5 @@ defeat = """
 | (__/  )| (____/\| )      | (____/\| )   ( |   | |   
 (______/ (_______/|/       (_______/|/     \|   )_(   
 """
+
+timeout = """You have run out of time, the round is over."""

@@ -1,6 +1,6 @@
 import data
 import random
-from text import divider, intro, agent, victory, defeat
+from text import divider, intro, agent, victory, defeat, timeout
 import time
 
 class Game:
@@ -14,6 +14,9 @@ Whether or not the game is over
 
 - self.win: Bool
 Whether or not the player won
+
+- self.roundsleft: int
+Number of turns before game ends
 
 - self.map: dict
 A dictionary, the name of the room is the key, the room
@@ -51,8 +54,10 @@ Methods
 + self.update(self) -> None:
 + self.run(self):
     """
+
     def __init__(self):
         self.gameover = False
+        self.roundsleft = 50
         self.win = False
 
     def intro(self) -> None:
@@ -158,6 +163,7 @@ Methods
         describe the current room, presence of objects,
         available paths, current hp and ability usage options
         """
+        print(f"There are {self.roundsleft} rounds left.")
         print(f"You are in {self.player_pos.get_name()}.")
         print(f"You have {self.player.get_hp()} hp.\n")
     
@@ -358,6 +364,10 @@ Methods
             else:
                 self.reyna_turn()
                 self.update()
+            self.roundsleft = self.roundsleft - 1
+            if self.roundsleft == 0:
+                print(timeout)
+                break
         if self.win:
             print(victory)
         else:
