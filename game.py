@@ -1,6 +1,6 @@
 import data
 import random
-from text import divider, intro, agent
+from text import divider, intro, agent, victory, defeat
 import time
 
 class Game:
@@ -353,6 +353,6 @@ Methods
                 self.reyna_turn()
                 self.update()
         if self.win:
-            print("\nVICTORY")
+            print(victory)
         else:
-            print("\nDEFEAT")
+            print(defeat)
