@@ -183,11 +183,17 @@ Methods
         if self.player_cooldown == 0:
             agent = self.player.get_agent()
             if agent == "sova":
-                self.sova(self.prompt(self.player_pos.get_paths(), "You can scan the following rooms: ", True))
+                choice = self.prompt(self.player_pos.get_paths(), "You can scan the following rooms: ", True)
+                if choice != -1:
+                    self.sova(choice)
             elif agent == "omen":
-                self.omen(self.prompt(self.map.keys(), "You can move to the following rooms: ", True))
+                choice = self.prompt(self.map.keys(), "You can move to the following rooms: ", True)
+                if choice != -1:
+                    self.omen(choice)
             elif agent == "sage":
-                self.sage(self.prompt(self.player_pos.get_paths(), "You can block the following rooms: ", True))
+                choice = self.prompt(self.player_pos.get_paths(), "You can block the following rooms: ", True)
+                if choice != -1:
+                    self.sage(choice)
             else:
                 print("Jett's ability cannot be manually activated\n")
         else:
