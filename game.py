@@ -3,6 +3,7 @@ import random
 from text import divider, intro, agent, victory, defeat, timeout
 import time
 
+
 class Game:
     """
 Class that creates an instance of the game
@@ -68,7 +69,7 @@ Methods
         print(intro)
 
     agent_descriptions = agent
-    
+
     agents = ["Jett", "Sova", "Omen", "Sage"]
     maps = ["Ascent", "Haven", "Bind"]
 
@@ -82,7 +83,7 @@ Methods
         print("GAME STARTS NOW!!!!")
         time.sleep(1)
         print(divider)
-            
+
     def prompt(self, options: list, message: str, cancel: bool) -> int:
         """
         Takes input from the player to pass on to other methods
@@ -99,9 +100,9 @@ Methods
         if cancel:
             print(f"[{len(options)+1}]: Cancel action")
         if cancel:
-            accept = [str(x) for x in range(1, len(options)+2)]
+            accept = [str(x) for x in range(1, len(options) + 2)]
         else:
-            accept = [str(x) for x in range(1, len(options)+1)]
+            accept = [str(x) for x in range(1, len(options) + 1)]
         choice = input("Pick a number: ")
         while choice not in accept:
             print("Invalid input")
@@ -110,8 +111,8 @@ Methods
         if int(choice) == len(options) + 1:
             return -1
         else:
-            return int(choice)-1
-    
+            return int(choice) - 1
+
     def agent_select(self, choice: int) -> str:
         """
         takes in choice of agent as a number
@@ -119,7 +120,7 @@ Methods
         """
         agents = ["jett", "sova", "omen", "sage"]
         return agents[choice]
-    
+
     def map_select(self, choice: int) -> None:
         """
         takes in choice of map as a number
@@ -131,7 +132,7 @@ Methods
             self.map = data.make_map("haven")
         elif choice == 2:
             self.map = data.make_map("bind")
-    
+
     def initialise(self, agent: str) -> None:
         """
         scatters orbs and creatures through the map
@@ -143,21 +144,21 @@ Methods
         orbs = 8
         rooms = list(self.map.keys())
         spawn_areas = rooms[1:-1]
-            
+
         spawn_creatures = random.sample(spawn_areas, creatures)
         for room in spawn_creatures:
             self.map[room].set_creature(True)
-                
+
         spawn_orbs = random.sample(spawn_areas, orbs)
         for room in spawn_orbs:
             self.map[room].set_orb(True)
-                
+
         self.player = data.Player(100, agent)
         self.player_cooldown = 0
-    
+
         self.player_pos = self.map[rooms[0]]
         self.reyna_pos = self.map[rooms[-1]]
-    
+
     def desc(self) -> None:
         """
         describe the current room, presence of objects,
@@ -166,10 +167,12 @@ Methods
         print(f"There are {self.roundsleft} rounds left.")
         print(f"You are in {self.player_pos.get_name()}.")
         print(f"You have {self.player.get_hp()} hp.\n")
-    
+
         if self.reyna_pos.get_name() in self.player_pos.get_paths():
-            print(f"You hear footsteps nearby...Reyna is in {self.reyna_pos.get_name()}\n.")
-            
+            print(
+                f"You hear footsteps nearby...Reyna is in {self.reyna_pos.get_name()}\n."
+            )
+
         print("You can move to the following rooms: ")
         paths = self.player_pos.get_paths()
         for path in paths:
@@ -178,9 +181,11 @@ Methods
         if self.player_cooldown == 0:
             print("ABILITY READY!")
         else:
-            print(f"{self.player_cooldown} turns until you can use your ability.")
+            print(
+                f"{self.player_cooldown} turns until you can use your ability."
+            )
         print(divider)
-    
+
     def ability(self) -> None:
         """
         uses the player's ability based on
@@ -189,22 +194,28 @@ Methods
         if self.player_cooldown == 0:
             agent = self.player.get_agent()
             if agent == "sova":
-                choice = self.prompt(self.player_pos.get_paths(), "You can scan the following rooms: ", True)
+                choice = self.prompt(self.player_pos.get_paths(),
+                                     "You can scan the following rooms: ",
+                                     True)
                 if choice != -1:
                     self.sova(choice)
             elif agent == "omen":
-                choice = self.prompt(self.map.keys(), "You can move to the following rooms: ", True)
+                choice = self.prompt(self.map.keys(),
+                                     "You can move to the following rooms: ",
+                                     True)
                 if choice != -1:
                     self.omen(choice)
             elif agent == "sage":
-                choice = self.prompt(self.player_pos.get_paths(), "You can block the following rooms: ", True)
+                choice = self.prompt(self.player_pos.get_paths(),
+                                     "You can block the following rooms: ",
+                                     True)
                 if choice != -1:
                     self.sage(choice)
             else:
                 print("Jett's ability cannot be manually activated\n")
         else:
             print("ABILITY NOT READY YET!")
-    
+
     def jett(self) -> None:
         """
         if player is about to die, moves player
@@ -218,7 +229,7 @@ Methods
         self.player_cooldown = 999
         self.player_pos = self.map[outcome]
         self.update()
-    
+
     def sova(self, choice: int) -> None:
         """
         takes in a chosen room as a number
@@ -237,7 +248,7 @@ Methods
         else:
             print(f"{room.get_name()} is empty.")
         self.player_cooldown = 2
-    
+
     def omen(self, choice: int) -> None:
         """
         takes in a chosen room as a number
@@ -248,7 +259,7 @@ Methods
         self.player_pos = room
         self.player_cooldown = 5
         self.update()
-    
+
     def sage(self, choice: int) -> None:
         """
         takes in choice of room as a number
@@ -258,16 +269,16 @@ Methods
         blocked = paths[choice]
         paths.remove(blocked)
         self.player_pos.set_paths(paths)
-    
+
         temp = self.map[blocked]
         paths = temp.get_paths()
         paths.remove(self.player_pos.get_name())
         temp.set_paths(paths)
-        
+
         self.player_cooldown = 3
         print(f"{blocked} is successfully blocked.")
         print(divider)
-    
+
     def move(self, choice: int) -> int:
         """
         takes in a chosen room as a number
@@ -275,7 +286,7 @@ Methods
         """
         room = self.player_pos.get_paths()[choice]
         self.player_pos = self.map[room]
-    
+
     def reyna_turn(self) -> None:
         """
         Moves reyna to a room adjacent to her current
@@ -284,7 +295,7 @@ Methods
         paths = self.reyna_pos.get_paths()
         move = random.choice(paths)
         self.reyna_pos = self.map[move]
-    
+
     def update(self) -> None:
         """
         adjust player hp based on presence of orbs, 
@@ -297,48 +308,59 @@ Methods
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
                 self.gameover = True
-            elif self.player.get_agent() == "jett" and self.player_cooldown == 0:
+            elif self.player.get_agent(
+            ) == "jett" and self.player_cooldown == 0:
                 self.jett()
             else:
                 self.gameover = True
-                print("Reyna annihilates you before you can even register her presence.")
+                print(
+                    "Reyna annihilates you before you can even register her presence."
+                )
         else:
             if self.player_pos.has_creature():
                 if self.player.get_hp() <= 30:
-                    if self.player.get_agent() == "jett" and self.player_cooldown == 0:
+                    if self.player.get_agent(
+                    ) == "jett" and self.player_cooldown == 0:
                         self.jett()
                     else:
-                        print("There is utility in this room, you lose 30 hp handling it.\n")
+                        print(
+                            "There is utility in this room, you lose 30 hp handling it.\n"
+                        )
                         print("Unfortunately, it was enough to kill you.\n")
                         self.gameover = True
                         return
                 else:
-                    print("There is utility in this room, you lose 30 hp handling it.\n")
+                    print(
+                        "There is utility in this room, you lose 30 hp handling it.\n"
+                    )
                     self.player.set_hp(True, False)
                     self.player_pos.set_creature(False)
-                        
+
             if self.player_pos.has_orb():
                 print("There is a shield orb in this room, you gain 50 hp.\n")
                 self.player.set_hp(False, True)
                 self.player_pos.set_orb(False)
-        
+
     def run(self):
         """
         run the game
         """
         self.intro()
-        agent = self.agent_select(self.prompt(self.agents, self.agent_descriptions, False))
+        agent = self.agent_select(
+            self.prompt(self.agents, self.agent_descriptions, False))
         self.map_select(self.prompt(self.maps, "Choose a map", False))
         self.initialise(agent)
         self.countdown()
-    
+
         while not self.gameover:
             self.desc()
             advance = False
             while not advance:
-                action = self.prompt(["Move", "Stay", "Ability"], "You can do the following: ", False)
+                action = self.prompt(["Move", "Stay", "Ability"],
+                                     "You can do the following: ", False)
                 if action == 0:
-                    choice = self.prompt(self.player_pos.get_paths(), "Where do you want to go?", True)
+                    choice = self.prompt(self.player_pos.get_paths(),
+                                         "Where do you want to go?", True)
                     if choice == -1:
                         pass
                     else:
@@ -346,7 +368,9 @@ Methods
                         advance = True
                 elif action == 1:
                     advance = True
-                    print(f"You stay in {self.player_pos.get_name()} for this turn.")
+                    print(
+                        f"You stay in {self.player_pos.get_name()} for this turn."
+                    )
                 elif action == 2:
                     self.ability()
                     if self.gameover == True:
