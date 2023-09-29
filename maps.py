@@ -12,6 +12,7 @@ class Map:
     -------
     room_names() -> list[str]
     get_room(name: str) -> Room
+    locate_char(name: str) -> Room
     """
     def __init__(self, roomdata: dict[str, list[str]]):
         self._rooms = {}
@@ -24,6 +25,11 @@ class Map:
     def get_room(self, name: str) -> data.Room:
         assert name in self._rooms
         return self._rooms[name]
+
+    def locate_char(self, name: str) -> data.Room:
+        for room in self._rooms.values():
+            if room.has_char(name):
+                return room
 
 
 def make_map(name: str) -> Map:
