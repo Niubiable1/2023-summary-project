@@ -199,8 +199,10 @@ class Agent:
     Attributes
     ----------
     + name: str
-    + hp: int
     + ability: str
+    + hp: int
+    + cooldown: int
+    
 
     Methods
     -------
@@ -211,6 +213,7 @@ class Agent:
     ability: str
     def __init__(self, hp: int):
         self.hp = hp
+        self.cooldown = 0
 
     def buff(self, amt: int) -> None:
         self.hp += amt
@@ -223,15 +226,30 @@ class Jett(Agent):
     name = "Jett"
     ability = "Escape"
 
+
 class Sova(Agent):
     name = "Sova"
     ability = "Scan"
+
 
 class Omen(Agent):
     name = "Omen"
     ability = "Teleport"
 
+
 class Sage(Agent):
     name = "Sage"
     ability = "Block"
 
+
+def create_agent(name: str, hp: int) -> Agent:
+    name = name.lower()
+    if name == "jett":
+        return Jett(hp)
+    if name == "sova":
+        return Sova(hp)
+    if name == "omen":
+        return Omen(hp)
+    if name == "sage":
+        return Sage(hp)
+    raise ValueError(f"{name}: invalid agent name")

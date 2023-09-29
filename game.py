@@ -26,9 +26,6 @@ itself is the value
 - self.player: player object
 An object containing attributes related to the player
 
-- self.player_cooldown: int
-Cooldown for the player's ability
-
 - self.player_pos: room object
 the room the player is currently in
 
@@ -153,8 +150,7 @@ Methods
         for room in spawn_orbs:
             self.map[room].set_orb(True)
 
-        self.player = data.Player(100, agent)
-        self.player_cooldown = 0
+        self.player = data.create_agent(agent, 100)
 
         self.player_pos = self.map[rooms[0]]
         self.reyna_pos = self.map[rooms[-1]]
@@ -166,7 +162,7 @@ Methods
         """
         print(f"There are {self.roundsleft} rounds left.")
         print(f"You are in {self.player_pos.get_name()}.")
-        print(f"You have {self.player.get_hp()} hp.\n")
+        print(f"You have {self.player.hp} hp.\n")
 
         if self.reyna_pos.get_name() in self.player_pos.get_paths():
             print(
@@ -178,11 +174,11 @@ Methods
         for path in paths:
             print(path)
         print()
-        if self.player_cooldown == 0:
+        if self.player.cooldown == 0:
             print("ABILITY READY!")
         else:
             print(
-                f"{self.player_cooldown} turns until you can use your ability."
+                f"{self.player.cooldown} turns until you can use your ability."
             )
         print(divider)
 
@@ -191,21 +187,20 @@ Methods
         uses the player's ability based on
         the agent they selected
         """
-        if self.player_cooldown == 0:
-            agent = self.player.get_agent()
-            if agent == "sova":
+        if self.player.cooldown == 0:
+            if isinstance(self.player, data.Sova):
                 choice = self.prompt(self.player_pos.get_paths(),
                                      "You can scan the following rooms: ",
                                      True)
                 if choice != -1:
                     self.sova(choice)
-            elif agent == "omen":
+            elif isinstance(self.player, data.Omen):
                 choice = self.prompt(self.map.keys(),
                                      "You can move to the following rooms: ",
                                      True)
                 if choice != -1:
                     self.omen(choice)
-            elif agent == "sage":
+            elif isinstance(self.player, data.Sage):
                 choice = self.prompt(self.player_pos.get_paths(),
                                      "You can block the following rooms: ",
                                      True)
@@ -226,7 +221,7 @@ Methods
         outcome = random.choice(paths)
         print("You were about to die. You used dash to escape.")
         print(f"You are now in {outcome}.")
-        self.player_cooldown = 999
+        self.player.cooldown = 999
         self.player_pos = self.map[outcome]
         self.update()
 
@@ -247,7 +242,7 @@ Methods
             print(f"{room.get_name()} has an orb.")
         else:
             print(f"{room.get_name()} is empty.")
-        self.player_cooldown = 2
+        self.player.cooldown = 2
 
     def omen(self, choice: int) -> None:
         """
@@ -257,7 +252,7 @@ Methods
         """
         room = self.map[list(self.map.keys())[choice]]
         self.player_pos = room
-        self.player_cooldown = 5
+        self.player.cooldown = 5
         self.update()
 
     def sage(self, choice: int) -> None:
@@ -275,7 +270,7 @@ Methods
         paths.remove(self.player_pos.get_name())
         temp.set_paths(paths)
 
-        self.player_cooldown = 3
+        self.player.cooldown = 3
         print(f"{blocked} is successfully blocked.")
         print(divider)
 
@@ -304,12 +299,11 @@ Methods
         """
         if self.reyna_pos == self.player_pos:
             print("\nReyna has found you!")
-            if self.player.get_hp() >= 300:
+            if self.player.hp >= 300:
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
                 self.gameover = True
-            elif self.player.get_agent(
-            ) == "jett" and self.player_cooldown == 0:
+            elif isinstance(self.player, data.Jett) and self.player.cooldown == 0:
                 self.jett()
             else:
                 self.gameover = True
@@ -318,9 +312,8 @@ Methods
                 )
         else:
             if self.player_pos.has_creature():
-                if self.player.get_hp() <= 30:
-                    if self.player.get_agent(
-                    ) == "jett" and self.player_cooldown == 0:
+                if self.player.hp <= 30:
+                    if isinstance(self.player, data.Jett) and self.player.cooldown == 0:
                         self.jett()
                     else:
                         print(
@@ -333,12 +326,12 @@ Methods
                     print(
                         "There is utility in this room, you lose 30 hp handling it.\n"
                     )
-                    self.player.set_hp(True, False)
+                    self.player.injure(30)
                     self.player_pos.set_creature(False)
 
             if self.player_pos.has_orb():
                 print("There is a shield orb in this room, you gain 50 hp.\n")
-                self.player.set_hp(False, True)
+                self.player.buff(50)
                 self.player_pos.set_orb(False)
 
     def run(self):
@@ -377,8 +370,8 @@ Methods
                         break
                     else:
                         self.desc()
-            if self.player_cooldown != 0:
-                self.player_cooldown = self.player_cooldown - 1
+            if self.player.cooldown != 0:
+                self.player.cooldown = self.player.cooldown - 1
             if self.gameover == True:
                 break
             else:
