@@ -1,3 +1,4 @@
+import agent
 import maps
 
 
@@ -19,7 +20,7 @@ class Ability:
     -------
     + is_charged() -> bool
     + update()
-    + use()
+    + use(player: Agent, map: Map, room: str)
     + reset()
     """
     name: str
@@ -36,9 +37,7 @@ class Ability:
         if self.timer < 0:
             self.timer = 0
 
-    def use(self, map: maps.Map):
-        # We could allow use() to take a game object
-        # but would not benefit from Replit's built-in typechecking
+    def use(self, player: agent.Agent, map: maps.Map, room: str):
         raise NotImplementedError
 
     def reset(self) -> None:

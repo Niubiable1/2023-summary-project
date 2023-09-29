@@ -1,3 +1,4 @@
+import ability
 import data
 
 
@@ -12,7 +13,6 @@ class Agent(data.Character):
     Attributes
     ----------
     + name: str
-    + ability: str
     + hp: int
     + cooldown: int
     
@@ -20,10 +20,11 @@ class Agent(data.Character):
     Methods
     -------
     + buff(amt: int) -> None
+    + get_ability() -> Ability
     + injure(amt: int) -> None
+    + update() -> None
     """
     name: str
-    ability: str
     def __init__(self, hp: int):
         self.hp = hp
         self.cooldown = 0
@@ -31,41 +32,55 @@ class Agent(data.Character):
     def buff(self, amt: int) -> None:
         self.hp += amt
 
-    def charge(self, time: int = 1) -> None:
-        self.cooldown -= time
-        # Cooldown cannot be < 0
-        if self.cooldown < 0:
-            self.cooldown = 0
+    def get_ability(self) -> ability. Ability:
+        raise NotImplementedError
 
     def injure(self, amt: int) -> None:
         self.hp -= amt
 
-    def is_charged(self) -> bool:
-        return self.cooldown == 0
-
-    def reset_cooldown(self, time: int) -> None:
-        assert time > 0
-        self.cooldown = time
+    def update(self):
+        for ability_ in self._abilities:
+            ability.update()
 
 
 class Jett(Agent):
     name = "Jett"
-    ability = "Escape"
+    def __init__(self, hp: int):
+        super().__init__(hp)
+        self._abilities = [ability.Escape()]
+
+    def get_ability(self) -> ability. Ability:
+        return self._abilities[0]
 
 
 class Sova(Agent):
     name = "Sova"
-    ability = "Scan"
+    def __init__(self, hp: int):
+        super().__init__(hp)
+        self._abilities = [ability.Scan()]
+
+    def get_ability(self) -> ability. Ability:
+        return self._abilities[0]
 
 
 class Omen(Agent):
     name = "Omen"
-    ability = "Teleport"
+    def __init__(self, hp: int):
+        super().__init__(hp)
+        self._abilities = [ability.Teleport()]
+
+    def get_ability(self) -> ability. Ability:
+        return self._abilities[0]
 
 
 class Sage(Agent):
     name = "Sage"
-    ability = "Block"
+    def __init__(self, hp: int):
+        super().__init__(hp)
+        self._abilities = [ability.Block()]
+
+    def get_ability(self) -> ability. Ability:
+        return self._abilities[0]
 
 
 def create(name: str, hp: int) -> Agent:

@@ -181,7 +181,7 @@ Methods
         for path in paths:
             print(path)
         print()
-        if self.player.is_charged():
+        if self.player.get_ability().is_charged():
             print("ABILITY READY!")
         else:
             print(
@@ -194,7 +194,7 @@ Methods
         uses the player's ability based on
         the agent they selected
         """
-        if self.player.is_charged():
+        if self.player.get_ability().is_charged():
             if isinstance(self.player, data.Sova):
                 choice = self.prompt(self.player_pos.paths(),
                                      "You can scan the following rooms: ",
@@ -228,7 +228,7 @@ Methods
         outcome = random.choice(paths)
         print("You were about to die. You used dash to escape.")
         print(f"You are now in {outcome}.")
-        self.player.reset_cooldown(999)
+        self.player.get_ability().reset()
         self.player_pos = self.map.get_room(outcome)
         self.update()
 
@@ -249,7 +249,7 @@ Methods
             print(f"{room.name} has an orb.")
         else:
             print(f"{room.name} is empty.")
-        self.player.reset_cooldown(2)
+        self.player.get_ability().reset()
 
     def omen(self, choice: int) -> None:
         """
@@ -259,7 +259,7 @@ Methods
         """
         room = self.map.get_room(self.map.room_names()[choice])
         self.player_pos = room
-        self.player.reset_cooldown(5)
+        self.player.get_ability().reset()
         self.update()
 
     def sage(self, choice: int) -> None:
@@ -279,7 +279,7 @@ Methods
         # TODO: encapsulate path blocking
         temp._paths = paths
 
-        self.player.reset_cooldown(3)
+        self.player.get_ability().reset()
         print(f"{blocked} is successfully blocked.")
         print(divider)
 
@@ -312,7 +312,7 @@ Methods
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
                 self.gameover = True
-            elif isinstance(self.player, data.Jett) and self.player.is_charged():
+            elif isinstance(self.player, data.Jett) and self.player.get_ability().is_charged():
                 self.jett()
             else:
                 self.gameover = True
@@ -323,7 +323,7 @@ Methods
             if self.player_pos.has_char("Creature"):
                 creature = self.player_pos.give_char("Creature")
                 if self.player.hp <= 30:
-                    if isinstance(self.player, data.Jett) and self.player.is_charged():
+                    if isinstance(self.player, data.Jett) and self.player.get_ability().is_charged():
                         self.jett()
                     else:
                         print(
@@ -378,7 +378,7 @@ Methods
                         break
                     else:
                         self.desc()
-            self.player.charge()
+            self.player.update()
             if self.gameover == True:
                 break
             else:
