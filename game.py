@@ -5,6 +5,7 @@ import time
 # Local imports
 import ability
 import data
+import maps
 from text import divider, intro, agent, victory, defeat, timeout
 
 
@@ -128,11 +129,11 @@ Methods
         makes map 
         """
         if choice == 0:
-            self.map = data.make_map("ascent")
+            self.map = maps.make_map("ascent")
         elif choice == 1:
-            self.map = data.make_map("haven")
+            self.map = maps.make_map("haven")
         elif choice == 2:
-            self.map = data.make_map("bind")
+            self.map = maps.make_map("bind")
 
     def initialise(self, agent: str) -> None:
         """
