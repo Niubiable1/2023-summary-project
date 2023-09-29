@@ -1,132 +1,92 @@
+"""data.py
 
+This module contains superclasses used by the other modules.
+
+It should not import any other modules.
+"""
 
 
 class Character:
     """
-    A Character class for each character
+    Base class for characters in the game.
 
     Attribrute:
-    hp : Health points of the character
-
-    Method:
-    - get_hp
+    name: str
+    hp: int
     """
     name: str
-
-    def __init__(self, hp: int):
-        self.hp = hp
-
-    def get_hp(self) -> int:
-        """returns hp value of player"""
-        return self.hp
+    hp: int
 
 
-class Player(Character):
-    """
-    A sub class of Character class
-
-    Attributes:
-    agent : Name of agent
-    
-    Methods:
-     - get_agent
-     - set_hp
-    """
-
-    def __init__(self, hp: int, agent: str):
-        super().__init__(hp)
-        self.agent = agent
-
-    def get_agent(self) -> str:
-        """Returns name of agent chosen"""
-        return self.agent
-
-    def set_hp(self, creature: bool, buff: bool) -> None:
-        """
-        Increases hp by 50 if buff found, and
-        decreases it by 30 if creature found, no return value
-        """
-        if creature:
-            self.hp -= 30
-        if buff:
-            self.hp += 50
+class Object:
+    """Base class for objects in the game."""
+    name: str
 
 
-class Agent:
-    """Represents an agent in the game.
+class Room:
+    """Encapsulates objects and characters.
 
-    Each agent has an ability which may affect the game map.
-    The ability has a cooldown
-    Agents are buffed or injured depending on the game situation.
-    Game over is determined by the game and not by agent HP.
+    Contains path data to other rooms.
 
     Attributes
     ----------
     + name: str
-    + ability: str
-    + hp: int
-    + cooldown: int
-    
 
     Methods
     -------
-    + buff(amt: int) -> None
-    + injure(amt: int) -> None
+    + characters() -> list[str]
+    + give_char(name: str) -> Character
+    + give_obj(name: str) -> Object
+    + has_char(name: str) -> bool
+    + has_obj(name: str) -> bool
+    + objects() -> list[str]
+    + paths() -> list[str]
+    + take_char(char: Character) -> None
+    + take_obj(obj: Object) -> None
     """
-    name: str
-    ability: str
-    def __init__(self, hp: int):
-        self.hp = hp
-        self.cooldown = 0
+    def __init__(self, name: str, paths: list[str]):
+        self.name = name
+        self._paths = paths
+        self._objects = []
+        self._characters = []
 
-    def buff(self, amt: int) -> None:
-        self.hp += amt
+    def characters(self) -> list[str]:
+        return [char.name for char in self._characters]
 
-    def charge(self, time: int = 1) -> None:
-        self.cooldown -= time
-        # Cooldown cannot be < 0
-        if self.cooldown < 0:
-            self.cooldown = 0
+    def give_char(self, name: str) -> Object:
+        for i, char in enumerate(self._characters):
+            if char.name == name:
+                return self._characters.pop(i)
+        raise ValueError(f"{name}: no such char")
 
-    def injure(self, amt: int) -> None:
-        self.hp -= amt
+    def give_obj(self, name: str) -> Object:
+        for i, obj in enumerate(self._objects):
+            if obj.name == name:
+                return self._objects.pop(i)
+        raise ValueError(f"{name}: no such obj")
 
-    def is_charged(self) -> bool:
-        return self.cooldown == 0
+    def has_char(self, name: str) -> bool:
+        for char in self._characters:
+            if char.name == name:
+                return True
+        return False
 
-    def reset_cooldown(self, time: int) -> None:
-        assert time > 0
-        self.cooldown = time
+    def has_obj(self, name: str) -> bool:
+        for obj in self._objects:
+            if obj.name == name:
+                return True
+        return False
 
+    def objects(self) -> list[str]:
+        return [obj.name for obj in self._objects]
 
-class Jett(Agent):
-    name = "Jett"
-    ability = "Escape"
+    def paths(self) -> list[str]:
+        return self._paths.copy()
+        
+    def take_obj(self, obj: Object) -> None:
+        self._objects.append(obj)
 
-
-class Sova(Agent):
-    name = "Sova"
-    ability = "Scan"
-
-
-class Omen(Agent):
-    name = "Omen"
-    ability = "Teleport"
-
-
-class Sage(Agent):
-    name = "Sage"
-    ability = "Block"
+    def take_char(self, char: Character) -> None:
+        self._characters.append(char)
 
 
-def create_agent(name: str, hp: int) -> Agent:
-    name = name.lower()
-    if name == "jett":
-        return Jett(hp)
-    if name == "sova":
-        return Sova(hp)
-    if name == "omen":
-        return Omen(hp)
-    if name == "sage":
-        return Sage(hp)
-    raise ValueError(f"{name}: invalid agent name")

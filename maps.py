@@ -1,65 +1,4 @@
-
-
-
-class Room:
-    """
-    The Room class for each room
-
-    Attributes:
-    name: Name of room
-    paths: List of rooms that this room has paths connected to
-    creature: A boolean for creature presence
-    orb: A boolean for powerup presence
-
-    Methods:
-    - get_name
-    - get_paths
-    - has_creature
-    - has_orb
-    - set_paths
-    - set_creature
-    - set_orb
-    """
-
-    def __init__(self, name: str, paths: list, creature: bool, orb: bool):
-        self.name = name
-        self.paths = paths
-        self.creature = creature
-        self.orb = orb
-
-    def get_name(self) -> str:
-        """Returns name of room"""
-        return self.name
-
-    def get_paths(self) -> list:
-        """Return list of paths for the room"""
-        return self.paths
-
-    def has_creature(self) -> bool:
-        """Returns creature presence in room"""
-        return self.creature
-
-    def has_orb(self) -> bool:
-        """Returns orb presence in room"""
-        return self.orb
-
-    def set_paths(self, paths: list):
-        """
-        Allows for modification of the list of paths for the room
-        """
-        self.paths = paths
-
-    def set_creature(self, creature: bool):
-        """
-        Allows for modification of the presence of a creature
-        """
-        self.creature = creature
-
-    def set_orb(self, orb: bool):
-        """
-        Allows for modification of the presence of an orb
-        """
-        self.orb = orb
+import data
 
 
 class Map:
@@ -77,12 +16,12 @@ class Map:
     def __init__(self, roomdata: dict[str, list[str]]):
         self._rooms = {}
         for name, paths in roomdata.items():
-            self._rooms[name] = Room(name, paths, False, False)
+            self._rooms[name] = data.Room(name, paths, False, False)
 
     def room_names(self) -> list[str]:
         return list(self._rooms)
 
-    def get_room(self, name: str) -> Room:
+    def get_room(self, name: str) -> data.Room:
         assert name in self._rooms
         return self._rooms[name]
 

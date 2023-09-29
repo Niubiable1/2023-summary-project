@@ -1,4 +1,4 @@
-# Cannot import game.py!
+import maps
 
 
 class Ability:
@@ -36,7 +36,9 @@ class Ability:
         if self.timer < 0:
             self.timer = 0
 
-    def use(self, map):
+    def use(self, map: maps.Map):
+        # We could allow use() to take a game object
+        # but would not benefit from Replit's built-in typechecking
         raise NotImplementedError
 
     def reset(self) -> None:
@@ -46,26 +48,26 @@ class Ability:
 class Escape(Ability):
     name = "Escape"
     cooldown = 999
-    def use(self, map):
+    def use(self, map: maps.Map):
         pass
 
 
 class Scan(Ability):
     name = "Scan"
     cooldown = 2
-    def use(self, map):
+    def use(self, map: maps.Map):
         pass
 
 
 class Teleport(Ability):
     name = "Teleport"
     cooldown = 5
-    def use(self, map):
+    def use(self, map: maps.Map):
         pass
 
 
 class Block(Ability):
     name = "Block"
     cooldown = 3
-    def use(self, map):
+    def use(self, map: maps.Map):
         pass
