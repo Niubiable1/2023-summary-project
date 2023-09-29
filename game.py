@@ -1,7 +1,11 @@
-import data
+# Built-in imports
 import random
-from text import divider, intro, agent, victory, defeat, timeout
 import time
+
+# Local imports
+import ability
+import data
+from text import divider, intro, agent, victory, defeat, timeout
 
 
 class Game:
