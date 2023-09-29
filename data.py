@@ -148,6 +148,7 @@ class Character:
     Method:
     - get_hp
     """
+    name: str
 
     def __init__(self, hp: int):
         self.hp = hp
@@ -186,3 +187,51 @@ class Player(Character):
             self.hp -= 30
         if buff:
             self.hp += 50
+
+
+class Agent:
+    """Represents an agent in the game.
+
+    Each agent has an ability which may affect the game map.
+    Agents are buffed or injured depending on the game situation.
+    Game over is determined by the game and not by agent HP.
+
+    Attributes
+    ----------
+    + name: str
+    + hp: int
+    + ability: str
+
+    Methods
+    -------
+    + buff(amt: int) -> None
+    + injure(amt: int) -> None
+    """
+    name: str
+    ability: str
+    def __init__(self, hp: int):
+        self.hp = hp
+
+    def buff(self, amt: int) -> None:
+        self.hp += amt
+
+    def injure(self, amt: int) -> None:
+        self.hp -= amt
+
+
+class Jett(Agent):
+    name = "Jett"
+    ability = "Escape"
+
+class Sova(Agent):
+    name = "Sova"
+    ability = "Scan"
+
+class Omen(Agent):
+    name = "Omen"
+    ability = "Teleport"
+
+class Sage(Agent):
+    name = "Sage"
+    ability = "Block"
+
