@@ -53,7 +53,7 @@ class Room:
     def characters(self) -> list[str]:
         return [char.name for char in self._characters]
 
-    def give_char(self, name: str) -> Object:
+    def give_char(self, name: str) -> Character:
         for i, char in enumerate(self._characters):
             if char.name == name:
                 return self._characters.pop(i)

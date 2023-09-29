@@ -33,10 +33,10 @@ A map encapsulating rooms
 - self.player: player object
 An object containing attributes related to the player
 
-- self.player_pos: room object
+- self.current_room: room object
 the room the player is currently in
 
-- self.reyna_pos: room object
+- self.reyna_room: room object
 the room the monster is currently in
 
 
@@ -158,9 +158,12 @@ Methods
             self.map.get_room(room).take_obj(objects.Orb(buff=50))
 
         self.player = agents.create(agent_name, hp=100)
+        self.reyna = enemy.Boss("Reyna", hp=100)
 
-        self.player_pos = self.map.get_room(rooms[0])
-        self.reyna_pos = self.map.get_room(rooms[-1])
+        self.current_room = self.map.get_room(rooms[0])
+        self.current_room.take_char(self.player)
+        self.reyna_room = self.map.get_room(rooms[-1])
+        self.map.get_room(rooms[-1]).take_char(self.reyna)
 
     def desc(self) -> None:
         """
@@ -168,16 +171,16 @@ Methods
         available paths, current hp and ability usage options
         """
         print(f"There are {self.roundsleft} rounds left.")
-        print(f"You are in {self.player_pos.name}.")
+        print(f"You are in {self.current_room.name}.")
         print(f"You have {self.player.hp} hp.\n")
 
-        if self.reyna_pos.name in self.player_pos.paths():
+        if self.reyna_room.name in self.current_room.paths():
             print(
-                f"You hear footsteps nearby...Reyna is in {self.reyna_pos.name}\n."
+                f"You hear footsteps nearby...Reyna is in {self.reyna_room.name}\n."
             )
 
         print("You can move to the following rooms: ")
-        paths = self.player_pos.paths()
+        paths = self.current_room.paths()
         for path in paths:
             print(path)
         print()
@@ -185,7 +188,7 @@ Methods
             print("ABILITY READY!")
         else:
             print(
-                f"{self.player.cooldown} turns until you can use your ability."
+                f"{self.player.get_ability().timer} turns until you can use your ability."
             )
         print(divider)
 
@@ -195,20 +198,20 @@ Methods
         the agent they selected
         """
         if self.player.get_ability().is_charged():
-            if isinstance(self.player, data.Sova):
-                choice = self.prompt(self.player_pos.paths(),
+            if isinstance(self.player, agents.Sova):
+                choice = self.prompt(self.current_room.paths(),
                                      "You can scan the following rooms: ",
                                      True)
                 if choice != -1:
                     self.sova(choice)
-            elif isinstance(self.player, data.Omen):
+            elif isinstance(self.player, agents.Omen):
                 choice = self.prompt(self.map.room_names(),
                                      "You can move to the following rooms: ",
                                      True)
                 if choice != -1:
                     self.omen(choice)
-            elif isinstance(self.player, data.Sage):
-                choice = self.prompt(self.player_pos.paths(),
+            elif isinstance(self.player, agents.Sage):
+                choice = self.prompt(self.current_room.paths(),
                                      "You can block the following rooms: ",
                                      True)
                 if choice != -1:
@@ -224,12 +227,12 @@ Methods
         to an adjacent room of the player's choice
         and avoid death
         """
-        paths = self.player_pos.paths()
+        paths = self.current_room.paths()
         outcome = random.choice(paths)
         print("You were about to die. You used dash to escape.")
         print(f"You are now in {outcome}.")
         self.player.get_ability().reset()
-        self.player_pos = self.map.get_room(outcome)
+        self.current_room = self.map.get_room(outcome)
         self.update()
 
     def sova(self, choice: int) -> None:
@@ -237,15 +240,15 @@ Methods
         takes in a chosen room as a number
         return creature presence and orb presence in a room adjacent to the player's
         """
-        paths = self.player_pos.paths()
+        paths = self.current_room.paths()
         room = self.map.get_room(paths[choice])
         ustatus = room.has_char("Creature")
         ostatus = room.has_obj("Orb")
-        if ustatus == True and ostatus == True:
+        if ustatus and ostatus:
             print(f"{room.name} has both utility and an orb.")
-        elif ustatus == True and ostatus == False:
+        elif ustatus and not ostatus:
             print(f"{room.name} has utility.")
-        elif ustatus == False and ostatus == True:
+        elif not ustatus and ostatus:
             print(f"{room.name} has an orb.")
         else:
             print(f"{room.name} is empty.")
@@ -258,7 +261,7 @@ Methods
         triggers update
         """
         room = self.map.get_room(self.map.room_names()[choice])
-        self.player_pos = room
+        self.current_room = room
         self.player.get_ability().reset()
         self.update()
 
@@ -267,15 +270,15 @@ Methods
         takes in choice of room as a number
         removes path between current room and chosen room permanently
         """
-        paths = self.player_pos.paths()
+        paths = self.current_room.paths()
         blocked = paths[choice]
         paths.remove(blocked)
         # TODO: encapsulate path blocking
-        self.player_pos._paths = paths
+        self.current_room._paths = paths
 
         temp = self.map.get_room(blocked)
         paths = temp.paths()
-        paths.remove(self.player_pos.name)
+        paths.remove(self.current_room.name)
         # TODO: encapsulate path blocking
         temp._paths = paths
 
@@ -288,17 +291,17 @@ Methods
         takes in a chosen room as a number
         moves player to chosen room
         """
-        room = self.player_pos.paths()[choice]
-        self.player_pos = self.map.get_room(room)
+        room = self.current_room.paths()[choice]
+        self.current_room = self.map.get_room(room)
 
     def reyna_turn(self) -> None:
         """
         Moves reyna to a room adjacent to her current
         room randomly
         """
-        paths = self.reyna_pos.paths()
+        paths = self.reyna_room.paths()
         move = random.choice(paths)
-        self.reyna_pos = self.map.get_room(move)
+        self.reyna_room = self.map.get_room(move)
 
     def update(self) -> None:
         """
@@ -306,13 +309,13 @@ Methods
         creatures, and reyna
         returns None
         """
-        if self.reyna_pos == self.player_pos:
+        if self.reyna_room == self.current_room:
             print("\nReyna has found you!")
             if self.player.hp >= 300:
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
                 self.gameover = True
-            elif isinstance(self.player, data.Jett) and self.player.get_ability().is_charged():
+            elif isinstance(self.player, agents.Jett) and self.player.get_ability().is_charged():
                 self.jett()
             else:
                 self.gameover = True
@@ -320,10 +323,10 @@ Methods
                     "Reyna annihilates you before you can even register her presence."
                 )
         else:
-            if self.player_pos.has_char("Creature"):
-                creature = self.player_pos.give_char("Creature")
+            if self.current_room.has_char("Creature"):
+                creature = self.current_room.give_char("Creature")
                 if self.player.hp <= 30:
-                    if isinstance(self.player, data.Jett) and self.player.get_ability().is_charged():
+                    if isinstance(self.player, agents.Jett) and self.player.get_ability().is_charged():
                         self.jett()
                     else:
                         print(
@@ -337,15 +340,13 @@ Methods
                         f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
                     )
                     self.player.injure(creature.dmg)
-            if self.player_pos.has_obj("Orb"):
-                orb = self.player_pos.give_obj("Orb")
+            if self.current_room.has_obj("Orb"):
+                orb = self.current_room.give_obj("Orb")
                 print(f"There is a shield orb in this room, you gain {orb.buff} hp.\n")
                 self.player.buff(orb.buff)
 
     def run(self):
-        """
-        run the game
-        """
+        """run the game"""
         self.intro()
         agent_name = self.agent_select(
             self.prompt(self.agent_names, self.agent_descriptions, False))
@@ -360,7 +361,7 @@ Methods
                 action = self.prompt(["Move", "Stay", "Ability"],
                                      "You can do the following: ", False)
                 if action == 0:
-                    choice = self.prompt(self.player_pos.paths(),
+                    choice = self.prompt(self.current_room.paths(),
                                          "Where do you want to go?", True)
                     if choice == -1:
                         pass
@@ -370,7 +371,7 @@ Methods
                 elif action == 1:
                     advance = True
                     print(
-                        f"You stay in {self.player_pos.name} for this turn."
+                        f"You stay in {self.current_room.name} for this turn."
                     )
                 elif action == 2:
                     self.ability()
@@ -379,11 +380,11 @@ Methods
                     else:
                         self.desc()
             self.player.update()
-            if self.gameover == True:
+            if self.gameover:
                 break
             else:
                 self.update()
-            if self.gameover == True:
+            if self.gameover:
                 break
             else:
                 self.reyna_turn()
