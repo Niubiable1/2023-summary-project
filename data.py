@@ -193,6 +193,7 @@ class Agent:
     """Represents an agent in the game.
 
     Each agent has an ability which may affect the game map.
+    The ability has a cooldown
     Agents are buffed or injured depending on the game situation.
     Game over is determined by the game and not by agent HP.
 
@@ -218,8 +219,21 @@ class Agent:
     def buff(self, amt: int) -> None:
         self.hp += amt
 
+    def charge(self, time: int = 1) -> None:
+        self.cooldown -= time
+        # Cooldown cannot be < 0
+        if self.cooldown < 0:
+            self.cooldown = 0
+
     def injure(self, amt: int) -> None:
         self.hp -= amt
+
+    def is_charged(self) -> bool:
+        return self.cooldown == 0
+
+    def reset_cooldown(self, time: int) -> None:
+        assert time > 0
+        self.cooldown = time
 
 
 class Jett(Agent):

@@ -174,7 +174,7 @@ Methods
         for path in paths:
             print(path)
         print()
-        if self.player.cooldown == 0:
+        if self.player.is_charged():
             print("ABILITY READY!")
         else:
             print(
@@ -187,7 +187,7 @@ Methods
         uses the player's ability based on
         the agent they selected
         """
-        if self.player.cooldown == 0:
+        if self.player.is_charged():
             if isinstance(self.player, data.Sova):
                 choice = self.prompt(self.player_pos.get_paths(),
                                      "You can scan the following rooms: ",
@@ -221,7 +221,7 @@ Methods
         outcome = random.choice(paths)
         print("You were about to die. You used dash to escape.")
         print(f"You are now in {outcome}.")
-        self.player.cooldown = 999
+        self.player.reset_cooldown(999)
         self.player_pos = self.map[outcome]
         self.update()
 
@@ -242,7 +242,7 @@ Methods
             print(f"{room.get_name()} has an orb.")
         else:
             print(f"{room.get_name()} is empty.")
-        self.player.cooldown = 2
+        self.player.reset_cooldown(2)
 
     def omen(self, choice: int) -> None:
         """
@@ -252,7 +252,7 @@ Methods
         """
         room = self.map[list(self.map.keys())[choice]]
         self.player_pos = room
-        self.player.cooldown = 5
+        self.player.reset_cooldown(5)
         self.update()
 
     def sage(self, choice: int) -> None:
@@ -270,7 +270,7 @@ Methods
         paths.remove(self.player_pos.get_name())
         temp.set_paths(paths)
 
-        self.player.cooldown = 3
+        self.player.reset_cooldown(3)
         print(f"{blocked} is successfully blocked.")
         print(divider)
 
@@ -303,7 +303,7 @@ Methods
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
                 self.gameover = True
-            elif isinstance(self.player, data.Jett) and self.player.cooldown == 0:
+            elif isinstance(self.player, data.Jett) and self.player.is_charged():
                 self.jett()
             else:
                 self.gameover = True
@@ -313,7 +313,7 @@ Methods
         else:
             if self.player_pos.has_creature():
                 if self.player.hp <= 30:
-                    if isinstance(self.player, data.Jett) and self.player.cooldown == 0:
+                    if isinstance(self.player, data.Jett) and self.player.is_charged():
                         self.jett()
                     else:
                         print(
@@ -370,8 +370,7 @@ Methods
                         break
                     else:
                         self.desc()
-            if self.player.cooldown != 0:
-                self.player.cooldown = self.player.cooldown - 1
+            self.player.charge()
             if self.gameover == True:
                 break
             else:
