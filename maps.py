@@ -62,14 +62,39 @@ class Room:
         self.orb = orb
 
 
-def make_map(map: str) -> dict:
+class Map:
+    """Encapsulates a set of connected rooms.
+
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
+    room_names() -> list[str]
+    get_room(name: str) -> Room
+    """
+    def __init__(self, roomdata: dict[str, list[str]]):
+        self._rooms = {}
+        for name, paths in roomdata.items():
+            self._rooms[name] = Room(name, paths, False, False)
+
+    def room_names(self) -> list[str]:
+        return list(self._rooms)
+
+    def get_room(self, name: str) -> Room:
+        assert name in self._rooms
+        return self._rooms[name]
+
+
+def make_map(name: str) -> Map:
     """
     Function takes in the name of the map as input by
     the user.
     It then returns the dictionary of room objects for
     the map if the map name is valid, else it returns -1
     """
-    if map == 'ascent':
+    if name == 'ascent':
         _roompaths = {
             "T-side spawn": ["A lobby", "B lobby"],
             "A lobby": ["T-side spawn", "A main", "Catwalk"],
@@ -85,7 +110,7 @@ def make_map(map: str) -> dict:
             ["CT-side spawn", "B site", "Tiles", "Catwalk", "Garden"],
             "CT-side spawn": ["A site", "Market", "B site"]
         }
-    elif map == 'haven':
+    elif name == 'haven':
         _roompaths = {
             "T-side spawn": ["A garden", "Grass", "C lobby"],
             "A garden": ["T-side spawn", "Mid window", "A lobby"],
@@ -107,7 +132,7 @@ def make_map(map: str) -> dict:
             "C lobby": ["T-side spawn", "C long"],
             "CT-side spawn": ["A link", "C link"]
         }
-    elif map == 'bind':
+    elif name == 'bind':
         _roompaths = {
             "T-side spawn": ["T-side cave", "A lobby", "Market"],
             "T-side cave": ["T-side spawn", "A lobby", "Market"],
@@ -133,10 +158,7 @@ def make_map(map: str) -> dict:
             "CT-side spawn": ["Heaven", "B hall"]
         }
     else:
-        return -1
+        raise ValueError(f"{name}: no such map")
 
-    rooms = {}
-    for room in _roompaths:
-        rooms[room] = Room(room, _roompaths[room], False, False)
-    return rooms
+    return Map(_roompaths)
 

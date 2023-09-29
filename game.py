@@ -24,9 +24,8 @@ Whether or not the player won
 - self.roundsleft: int
 Number of turns before game ends
 
-- self.map: dict
-A dictionary, the name of the room is the key, the room
-itself is the value
+- self.map: Map
+A map encapsulating rooms
 
 - self.player: player object
 An object containing attributes related to the player
@@ -144,21 +143,21 @@ Methods
         """
         creatures = 5
         orbs = 8
-        rooms = list(self.map.keys())
+        rooms = self.map.room_names()
         spawn_areas = rooms[1:-1]
 
         spawn_creatures = random.sample(spawn_areas, creatures)
         for room in spawn_creatures:
-            self.map[room].set_creature(True)
+            self.map.get_room(room).set_creature(True)
 
         spawn_orbs = random.sample(spawn_areas, orbs)
         for room in spawn_orbs:
-            self.map[room].set_orb(True)
+            self.map.get_room(room).set_orb(True)
 
         self.player = data.create_agent(agent, 100)
 
-        self.player_pos = self.map[rooms[0]]
-        self.reyna_pos = self.map[rooms[-1]]
+        self.player_pos = self.map.get_room(rooms[0])
+        self.reyna_pos = self.map.get_room(rooms[-1])
 
     def desc(self) -> None:
         """
@@ -200,7 +199,7 @@ Methods
                 if choice != -1:
                     self.sova(choice)
             elif isinstance(self.player, data.Omen):
-                choice = self.prompt(self.map.keys(),
+                choice = self.prompt(self.map.room_names(),
                                      "You can move to the following rooms: ",
                                      True)
                 if choice != -1:
@@ -227,7 +226,7 @@ Methods
         print("You were about to die. You used dash to escape.")
         print(f"You are now in {outcome}.")
         self.player.reset_cooldown(999)
-        self.player_pos = self.map[outcome]
+        self.player_pos = self.map.get_room(outcome)
         self.update()
 
     def sova(self, choice: int) -> None:
@@ -236,7 +235,7 @@ Methods
         return creature presence and orb presence in a room adjacent to the player's
         """
         paths = self.player_pos.get_paths()
-        room = self.map[paths[choice]]
+        room = self.map.get_room(paths[choice])
         ustatus = room.has_creature()
         ostatus = room.has_orb()
         if ustatus == True and ostatus == True:
@@ -255,7 +254,7 @@ Methods
         moves player to chosen room
         triggers update
         """
-        room = self.map[list(self.map.keys())[choice]]
+        room = self.map.get_room(self.map.room_names()[choice])
         self.player_pos = room
         self.player.reset_cooldown(5)
         self.update()
@@ -270,7 +269,7 @@ Methods
         paths.remove(blocked)
         self.player_pos.set_paths(paths)
 
-        temp = self.map[blocked]
+        temp = self.map.get_room(blocked)
         paths = temp.get_paths()
         paths.remove(self.player_pos.get_name())
         temp.set_paths(paths)
@@ -285,7 +284,7 @@ Methods
         moves player to chosen room
         """
         room = self.player_pos.get_paths()[choice]
-        self.player_pos = self.map[room]
+        self.player_pos = self.map.get_room(room)
 
     def reyna_turn(self) -> None:
         """
@@ -294,7 +293,7 @@ Methods
         """
         paths = self.reyna_pos.get_paths()
         move = random.choice(paths)
-        self.reyna_pos = self.map[move]
+        self.reyna_pos = self.map.get_room(move)
 
     def update(self) -> None:
         """
