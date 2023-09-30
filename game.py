@@ -9,12 +9,12 @@ import data
 import enemy
 import maps
 import objects
+import text
 from text import divider, intro, agent, victory, defeat, timeout
 
 
 class Game:
-    """
-Class that creates an instance of the game
+    """Class that creates an instance of the game
 
 Attributes
 --------------------------------------------
@@ -59,8 +59,7 @@ Methods
         self.win = False
 
     def intro(self) -> None:
-        """
-        print intro message, instructions, etc.
+        """Print intro message, instructions, etc.
         returns nothing 
         """
         print(intro)
@@ -82,8 +81,7 @@ Methods
         print(divider)
 
     def prompt(self, options: list, message: str, cancel: bool) -> int:
-        """
-        Takes input from the player to pass on to other methods
+        """Takes input from the player to pass on to other methods
         
         - options is a list of choices given to the player
         - message is a description of the choice to be made
@@ -111,28 +109,21 @@ Methods
             return int(choice) - 1
 
     def agent_select(self, choice: int) -> str:
-        """
-        takes in choice of agent as a number
+        """Takes in choice of agent as a number
         return agent name as string
         """
         agent_names = ["jett", "sova", "omen", "sage"]
         return agent_names[choice]
 
-    def map_select(self, choice: int) -> None:
+    def map_select(self, choice: str) -> None:
         """
-        takes in choice of map as a number
+        takes in choice of map
         makes map 
         """
-        if choice == 0:
-            self.map = maps.make_map("ascent")
-        elif choice == 1:
-            self.map = maps.make_map("haven")
-        elif choice == 2:
-            self.map = maps.make_map("bind")
+        self.map = maps.make_map(choice)
 
     def initialise(self, agent_name: str) -> None:
-        """
-        scatters orbs and creatures through the map
+        """Scatters orbs and creatures through the map
         creates player class
         sets cooldown for player
         sets starting positions for reyna and player
@@ -159,21 +150,20 @@ Methods
         reyna_room.take_char(self.reyna)
 
     def desc(self) -> None:
-        """
-        describe the current room, presence of objects,
+        """Describe the current room, presence of objects,
         available paths, current hp and ability usage options
         """
         current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
         print(f"There are {self.roundsleft} rounds left.")
         print(f"You are in {current_room.name}.")
         print(f"You have {self.player.hp} hp.\n")
 
-        if reyna_room.name in current_room.paths():
-            print(
-                f"You hear footsteps nearby...Reyna is in {reyna_room.name}\n."
-            )
-
+        for room_name in current_room.paths():
+            if self.map.get_room(room_name).has_char("Reyna"):
+                print(
+                    f"You hear footsteps nearby...Reyna is in {room_name}\n."
+                )
+                break
         print("You can move to the following rooms: ")
         paths = current_room.paths()
         for path in paths:
@@ -188,7 +178,7 @@ Methods
         print(divider)
 
     def use_active_ability(self) -> None:
-        """uses the player's ability based on
+        """Uses the player's ability based on
         the agent they selected
         """
         current_room = self.map.locate_char(self.player.name)
@@ -204,7 +194,7 @@ Methods
             ability_.use(self.player.name, self.map, current_room, choice)
             
     def trigger_passive_ability(self) -> None:
-        """triggers the player's ability based on
+        """Triggers the player's ability based on
         the agent they selected
         """
         current_room = self.map.locate_char(self.player.name)
@@ -218,19 +208,16 @@ Methods
             ability_.use(self.player.name, self.map, current_room, choice)
 
     def move(self, choice: int) -> int:
-        """
-        takes in a chosen room as a number
+        """Takes in a chosen room as a number
         moves player to chosen room
         """
         current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
         next_room = self.map.get_room(current_room.paths()[choice])
         player = current_room.give_char(self.player.name)
         next_room.take_char(player)
 
     def reyna_turn(self) -> None:
-        """
-        Moves reyna to a room adjacent to her current
+        """Moves reyna to a room adjacent to her current
         room randomly
         """
         current_room = self.map.locate_char(self.player.name)
@@ -248,13 +235,12 @@ Methods
         returns None
         """
         current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
         # Trigger any passive abilities, if valid
         self.trigger_passive_ability()
 
-        # Jett should have escaped by now, is he can use his ability
+        # Jett should have escaped by now, if he can use his ability
         # Should test
-        if reyna_room.name == current_room.name:
+        if current_room.has_char("Reyna"):
             print("\nReyna has found you!")
             if self.player.hp >= 300:
                 self.win = True
@@ -283,36 +269,50 @@ Methods
     def run(self):
         """run the game"""
         self.intro()
-        agent_name = self.agent_select(
-            self.prompt(self.agent_names, self.agent_descriptions, False))
-        self.map_select(self.prompt(self.maps, "Choose a map", False))
+        agent_name = text.prompt_valid_choice(
+            self.agent_names,
+            self.agent_descriptions,
+            cancel=False
+        )
+        self.map_select(
+            text.prompt_valid_choice(
+                self.maps,
+                "Choose a map",
+                cancel=False
+            )
+        )
         self.initialise(agent_name)
         self.countdown()
 
         while not self.gameover:
             current_room = self.map.locate_char(self.player.name)
-            reyna_room = self.map.locate_char(self.reyna.name)
             self.desc()
             advance = False
             while not advance:
-                action = self.prompt(["Move", "Stay", "Ability"],
-                                     "You can do the following: ", False)
-                if action == 0:
-                    choice = self.prompt(current_room.paths(),
-                                         "Where do you want to go?", True)
-                    if choice == -1:
+                action = text.prompt_valid_choice(
+                    ["Move", "Stay", "Ability"],
+                    "You can do the following: ",
+                    cancel=False
+                )
+                if action == "Move":
+                    choice = text.prompt_valid_choice(
+                        current_room.paths(),
+                        "Where do you want to go?",
+                        cancel=True
+                    )
+                    if not choice:
                         pass
                     else:
                         self.move(choice)
                         advance = True
-                elif action == 1:
+                elif action == "Stay":
                     advance = True
                     print(
                         f"You stay in {current_room.name} for this turn."
                     )
-                elif action == 2:
+                elif action == "Ability":
                     self.use_active_ability()
-                    if self.gameover == True:
+                    if self.gameover:
                         break
                     else:
                         self.desc()

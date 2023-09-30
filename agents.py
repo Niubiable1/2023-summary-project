@@ -13,6 +13,7 @@ class Agent(data.Character):
     Attributes
     ----------
     + name: str
+    + description: str
     + hp: int
     + cooldown: int
     
@@ -25,6 +26,7 @@ class Agent(data.Character):
     + update() -> None
     """
     name: str
+    description: str
     def __init__(self, hp: int):
         self.hp = hp
         self.cooldown = 0
@@ -45,6 +47,7 @@ class Agent(data.Character):
 
 class Jett(Agent):
     name = "Jett"
+    description = "Dash into an adjacent room if you would otherwise die (does not refresh)"
     def __init__(self, hp: int):
         super().__init__(hp)
         self._abilities = [ability.Escape()]
@@ -55,6 +58,7 @@ class Jett(Agent):
 
 class Sova(Agent):
     name = "Sova"
+    description = "Scan an adjacent room for information (cooldown: 2 turn)"
     def __init__(self, hp: int):
         super().__init__(hp)
         self._abilities = [ability.Scan()]
@@ -65,6 +69,7 @@ class Sova(Agent):
 
 class Omen(Agent):
     name = "Omen"
+    description = "Move to any room on the map (cooldown: 5 turns)"
     def __init__(self, hp: int):
         super().__init__(hp)
         self._abilities = [ability.Teleport()]
@@ -75,6 +80,7 @@ class Omen(Agent):
 
 class Sage(Agent):
     name = "Sage"
+    description = "Block a path from your current room to an adjacent one permanently (cooldown: 3 turns)"
     def __init__(self, hp: int):
         super().__init__(hp)
         self._abilities = [ability.Block()]
