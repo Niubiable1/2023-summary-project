@@ -22,6 +22,8 @@ class Ability:
 
     Methods
     -------
+    + is_active() -> bool
+    + is_passive() -> bool
     + is_charged() -> bool
     + prompt_choice(agent: str, map: Map, current_room: Room) -> Any
     + update(agent: str, map: Map, current_room: Room)
@@ -32,6 +34,14 @@ class Ability:
     cooldown: int
     def __init__(self, timer: int = 0):
         self.timer = timer
+
+    def is_active(self) -> bool:
+        """Returns True if the ability must be manually invoked, otherwise False"""
+        raise NotImplementedError
+
+    def is_passive(self) -> bool:
+        """Returns True if the ability is automatically triggered, otherwise False"""
+        raise NotImplementedError
 
     def is_charged(self) -> bool:
         assert self.timer >= 0
@@ -57,11 +67,24 @@ class Ability:
 class Escape(Ability):
     name = "Escape"
     cooldown = 999
+    def is_active(self) -> bool:
+        return False
+
+    def is_passive(self) -> bool:
+        return True
+
     def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room):
         """This ability picks a random room to teleport to.
         It does not actually prompt the player.
         """
-        return random.choice(current_room.paths())
+        if not self.is_charged():
+            return None
+        player = current_room.give_char(agent)
+        current_room.take_char(player)
+        if current_room.has_char("Reyna") and player.hp < 300:
+            return random.choice(current_room.paths())
+        elif current_room.has_char("Creature") and player.hp < 30:
+            return random.choice(current_room.paths())
     
     def use(self, agent: str, map: maps.Map, current_room: data.Room, choice):
         print("You were about to die. You used dash to escape.")
@@ -75,6 +98,12 @@ class Escape(Ability):
 class Scan(Ability):
     name = "Scan"
     cooldown = 2
+    def is_active(self) -> bool:
+        return True
+
+    def is_passive(self) -> bool:
+        return False
+
     def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> str | None:
         return text.prompt_valid_choice(
             current_room.paths(),
@@ -100,6 +129,12 @@ class Scan(Ability):
 class Teleport(Ability):
     name = "Teleport"
     cooldown = 5
+    def is_active(self) -> bool:
+        return True
+
+    def is_passive(self) -> bool:
+        return False
+
     def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> str | None:
         return text.prompt_valid_choice(
             map.room_names(),
@@ -117,6 +152,12 @@ class Teleport(Ability):
 class Block(Ability):
     name = "Block"
     cooldown = 3
+    def is_active(self) -> bool:
+        return True
+
+    def is_passive(self) -> bool:
+        return False
+
     def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> str | None:
         return text.prompt_valid_choice(
             current_room.paths(),

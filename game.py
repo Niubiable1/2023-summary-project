@@ -42,7 +42,7 @@ Methods
 + self.map_select(self, choice: int) -> None:
 + self.initialise(self, agent_name: str) -> None:
 + self.desc(self) -> None:
-+ self.ability(self) -> None:
++ self.use_active_ability(self) -> None:
 - self.jett(self) -> None:
 - self.sova(self, choice: int) -> None:
 - self.omen(self, choice: int) -> None:
@@ -187,48 +187,35 @@ Methods
             )
         print(divider)
 
-    def ability(self) -> None:
-        """
-        uses the player's ability based on
+    def use_active_ability(self) -> None:
+        """uses the player's ability based on
         the agent they selected
         """
         current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
         ability_ = self.player.get_ability()
+        if not ability_.is_active():
+            print("{ability_.name} cannot be manually activated\n")
+            return
         if not ability_.is_charged():
             print("ABILITY NOT READY YET!")
             return
-        if isinstance(self.player, agents.Sova):
-            choice = ability_.prompt_choice(self.player.name, self.map, current_room)
-            if choice:
-                ability_.use(self.player.name, self.map, current_room, choice)
-        elif isinstance(self.player.name, agents.Omen):
-            choice = ability_.prompt_choice(self.player.name, self.map, current_room)
-            if choice:
-                ability_.use(self.player.name, self.map, current_room, choice)
-        elif isinstance(self.player, agents.Sage):
-            choice = ability_.prompt_choice(self.player.name, self.map, current_room)
-            if choice:
-                ability_.use(self.player.name, self.map, current_room, choice)
-        else:
-            print("Jett's ability cannot be manually activated\n")
-
-    def jett(self) -> None:
-        """
-        if player is about to die, moves player
-        to an adjacent room of the player's choice
-        and avoid death
+        choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+        if choice:
+            ability_.use(self.player.name, self.map, current_room, choice)
+            
+    def trigger_passive_ability(self) -> None:
+        """triggers the player's ability based on
+        the agent they selected
         """
         current_room = self.map.locate_char(self.player.name)
-        paths = current_room.paths()
-        outcome = random.choice(paths)
-        print("You were about to die. You used dash to escape.")
-        print(f"You are now in {outcome}.")
-        self.player.get_ability().reset()
-        next_room = self.map.get_room(outcome)
-        player = current_room.give_char(self.player.name)
-        next_room.take_char(player)
-        self.update()
+        ability_ = self.player.get_ability()
+        if not ability_.is_passive():
+            return
+        if not ability_.is_charged():
+            return
+        choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+        if choice:
+            ability_.use(self.player.name, self.map, current_room, choice)
 
     def move(self, choice: int) -> int:
         """
@@ -256,50 +243,38 @@ Methods
     def update(self) -> None:
         """
         adjust player hp based on presence of orbs, 
-        creatures, and reyna
+        creatures, and reyna.
+        Triggers any passive abilities.
         returns None
         """
         current_room = self.map.locate_char(self.player.name)
         reyna_room = self.map.locate_char(self.reyna.name)
+        # Trigger any passive abilities, if valid
+        self.trigger_passive_ability()
+
+        # Jett should have escaped by now, is he can use his ability
+        # Should test
         if reyna_room.name == current_room.name:
             print("\nReyna has found you!")
             if self.player.hp >= 300:
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
-                self.gameover = True
-            elif isinstance(self.player, agents.Jett):
-                ability = self.player.get_ability()
-                if ability.is_charged():
-                    choice = ability.prompt_choice(self.player.name, self.map, current_room)
-                    if choice:
-                         ability.use(self.player.name, self.map, current_room, choice)
             else:
-                self.gameover = True
                 print(
                     "Reyna annihilates you before you can even register her presence."
                 )
+            self.gameover = True
         else:
             if current_room.has_char("Creature"):
                 creature = current_room.give_char("Creature")
-                if self.player.hp <= 30:
-                    if isinstance(self.player, agents.Jett):
-                        ability = self.player.get_ability()
-                        if ability.is_charged():
-                            choice = ability.prompt_choice(self.player.name, self.map, current_room)
-                            if choice:
-                                 ability.use(self.player.name, self.map, current_room, choice)
-                    else:
-                        print(
-                            f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
-                        )
-                        print("Unfortunately, it was enough to kill you.\n")
-                        self.gameover = True
-                        return
-                else:
-                    print(
-                        f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
-                    )
-                    self.player.injure(creature.dmg)
+                self.player.injure(creature.dmg)
+                print(
+                    f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
+                )
+                if self.player.hp <= 0:
+                    print("Unfortunately, it was enough to kill you.\n")
+                    self.gameover = True
+                    return
             if current_room.has_obj("Orb"):
                 orb = current_room.give_obj("Orb")
                 print(f"There is a shield orb in this room, you gain {orb.buff} hp.\n")
@@ -336,7 +311,7 @@ Methods
                         f"You stay in {current_room.name} for this turn."
                     )
                 elif action == 2:
-                    self.ability()
+                    self.use_active_ability()
                     if self.gameover == True:
                         break
                     else:
