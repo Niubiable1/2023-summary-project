@@ -194,29 +194,24 @@ Methods
         """
         current_room = self.map.locate_char(self.player.name)
         reyna_room = self.map.locate_char(self.reyna.name)
-        if self.player.get_ability().is_charged():
-            if isinstance(self.player, agents.Sova):
-                choice = self.prompt(current_room.paths(),
-                                     "You can scan the following rooms: ",
-                                     True)
-                if choice != -1:
-                    self.sova(choice)
-            elif isinstance(self.player, agents.Omen):
-                choice = self.prompt(self.map.room_names(),
-                                     "You can move to the following rooms: ",
-                                     True)
-                if choice != -1:
-                    self.omen(choice)
-            elif isinstance(self.player, agents.Sage):
-                choice = self.prompt(current_room.paths(),
-                                     "You can block the following rooms: ",
-                                     True)
-                if choice != -1:
-                    self.sage(choice)
-            else:
-                print("Jett's ability cannot be manually activated\n")
-        else:
+        ability_ = self.player.get_ability()
+        if not ability_.is_charged():
             print("ABILITY NOT READY YET!")
+            return
+        if isinstance(self.player, agents.Sova):
+            choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+            if choice:
+                ability_.use(self.player.name, self.map, current_room, choice)
+        elif isinstance(self.player.name, agents.Omen):
+            choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+            if choice:
+                ability_.use(self.player.name, self.map, current_room, choice)
+        elif isinstance(self.player, agents.Sage):
+            choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+            if choice:
+                ability_.use(self.player.name, self.map, current_room, choice)
+        else:
+            print("Jett's ability cannot be manually activated\n")
 
     def jett(self) -> None:
         """
@@ -225,7 +220,6 @@ Methods
         and avoid death
         """
         current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
         paths = current_room.paths()
         outcome = random.choice(paths)
         print("You were about to die. You used dash to escape.")
@@ -242,7 +236,6 @@ Methods
         return creature presence and orb presence in a room adjacent to the player's
         """
         current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
         paths = current_room.paths()
         room = self.map.get_room(paths[choice])
         ustatus = room.has_char("Creature")
@@ -276,8 +269,7 @@ Methods
         takes in choice of room as a number
         removes path between current room and chosen room permanently
         """
-        player = current_room.give_char(self.player.name)
-        next_room.take_char(player)
+        current_room = self.map.locate_char(self.player.name)
         paths = current_room.paths()
         blocked = paths[choice]
         paths.remove(blocked)
@@ -331,8 +323,12 @@ Methods
                 self.win = True
                 print("Somehow, you manage to win the gunfight.")
                 self.gameover = True
-            elif isinstance(self.player, agents.Jett) and self.player.get_ability().is_charged():
-                self.jett()
+            elif isinstance(self.player, agents.Jett):
+                ability = self.player.get_ability()
+                if ability.is_charged():
+                    choice = ability.prompt_choice(self.player.name, self.map, current_room)
+                    if choice:
+                         ability.use(self.player.name, self.map, current_room, choice)
             else:
                 self.gameover = True
                 print(
@@ -342,8 +338,12 @@ Methods
             if current_room.has_char("Creature"):
                 creature = current_room.give_char("Creature")
                 if self.player.hp <= 30:
-                    if isinstance(self.player, agents.Jett) and self.player.get_ability().is_charged():
-                        self.jett()
+                    if isinstance(self.player, agents.Jett):
+                        ability = self.player.get_ability()
+                        if ability.is_charged():
+                            choice = ability.prompt_choice(self.player.name, self.map, current_room)
+                            if choice:
+                                 ability.use(self.player.name, self.map, current_room, choice)
                     else:
                         print(
                             f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
