@@ -32,7 +32,7 @@ class Agent(data.Character):
     def buff(self, amt: int) -> None:
         self.hp += amt
 
-    def get_ability(self) -> ability. Ability:
+    def get_ability(self) -> ability.Ability:
         raise NotImplementedError
 
     def injure(self, amt: int) -> None:
@@ -40,7 +40,7 @@ class Agent(data.Character):
 
     def update(self):
         for ability_ in self._abilities:
-            ability.update()
+            ability_.update()
 
 
 class Jett(Agent):

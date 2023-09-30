@@ -1,4 +1,5 @@
-import agents
+from typing import Any
+
 import data
 import maps
 import random
@@ -22,9 +23,9 @@ class Ability:
     Methods
     -------
     + is_charged() -> bool
-    + prompt_choice(player: Agent, map: Map, current_room: Room) -> Any
-    + update(player: Agent, map: Map, current_room: Room)
-    + use(player: Agent, map: Map, current_room: Room, choice)
+    + prompt_choice(agent: str, map: Map, current_room: Room) -> Any
+    + update(agent: str, map: Map, current_room: Room)
+    + use(agent: str, map: Map, current_room: Room, choice)
     + reset()
     """
     name: str
@@ -36,7 +37,7 @@ class Ability:
         assert self.timer >= 0
         return self.timer == 0
 
-    def prompt_choice(self, player: agents.Agent, map: maps.Map, current_room: data.Room) -> Any:
+    def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> Any:
         """Prompts the player to make a choice depending on the ability's effect."""
         raise NotImplementedError
 
@@ -45,7 +46,7 @@ class Ability:
         if self.timer < 0:
             self.timer = 0
 
-    def use(self, player: agents.Agent, map: maps.Map, current_room: data.Room, choice) -> None:
+    def use(self, agent: str, map: maps.Map, current_room: data.Room, choice) -> None:
         """Applies the ability's effect, based on the player's choice from prompt_choice()."""
         raise NotImplementedError
 
@@ -56,32 +57,32 @@ class Ability:
 class Escape(Ability):
     name = "Escape"
     cooldown = 999
-    def prompt_choice(self, player: agents.Agent, map: maps.Map, current_room: data.Room):
+    def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room):
         """This ability picks a random room to teleport to.
         It does not actually prompt the player.
         """
         return random.choice(current_room.paths())
     
-    def use(self, player: agents.Agent, map: maps.Map, current_room: data.Room, choice):
+    def use(self, agent: str, map: maps.Map, current_room: data.Room, choice):
         print("You were about to die. You used dash to escape.")
         print(f"You are now in {choice}.")
         self.reset()
         next_room = map.get_room(choice)
-        current_room.give_char(player.name)
+        player = current_room.give_char(agent)
         next_room.take_char(player)
 
 
 class Scan(Ability):
     name = "Scan"
     cooldown = 2
-    def prompt_choice(self, player: agents.Agent, map: maps.Map, current_room: data.Room) -> str | None:
+    def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> str | None:
         return text.prompt_valid_choice(
             current_room.paths(),
             "You can scan the following rooms: ",
             cancel=True
         )
     
-    def use(self, player: agents.Agent, map: maps.Map, current_room: data.Room, choice: str) -> None:
+    def use(self, agent: str, map: maps.Map, current_room: data.Room, choice: str) -> None:
         room = map.get_room(choice)
         ustatus = room.has_char("Creature")
         ostatus = room.has_obj("Orb")
@@ -99,16 +100,16 @@ class Scan(Ability):
 class Teleport(Ability):
     name = "Teleport"
     cooldown = 5
-    def prompt_choice(self, player: agent.Agent, map: maps.Map, current_room: data.Room) -> str | None:
+    def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> str | None:
         return text.prompt_valid_choice(
             map.room_names(),
             "You can move to the following rooms: ",
             cancel=True
         )
         
-    def use(self, player: agents.Agent, map: maps.Map, current_room: data.Room, choice: str) -> None:
+    def use(self, agent: str, map: maps.Map, current_room: data.Room, choice: str) -> None:
         next_room = map.get_room(choice)
-        current_room.give_char(player.name)
+        player = current_room.give_char(agent)
         next_room.take_char(player)
         self.reset()
 
@@ -116,14 +117,14 @@ class Teleport(Ability):
 class Block(Ability):
     name = "Block"
     cooldown = 3
-    def prompt_choice(self, player: agents.Agent, map: maps.Map, current_room: data.Room) -> str | None:
+    def prompt_choice(self, agent: str, map: maps.Map, current_room: data.Room) -> str | None:
         return text.prompt_valid_choice(
             current_room.paths(),
             "You can block the following rooms: ",
             cancel=True
         )
     
-    def use(self, player: agents.Agent, map: maps.Map, current_room: data.Room, choice: str) -> None:
+    def use(self, agent: str, map: maps.Map, current_room: data.Room, choice: str) -> None:
         # TODO: encapsulate path blocking
         current_room._paths.remove(choice)
         target = map.get_room(choice)
