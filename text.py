@@ -1,3 +1,5 @@
+from typing import Any
+
 divider = "====================================================="
 
 intro = f"""Welcome to Valorant.
@@ -53,3 +55,30 @@ defeat = """
 """
 
 timeout = """You have run out of time, the round is over."""
+
+
+def prompt_valid_choice(options: list, message: str, cancel: bool) -> Any:
+        """Prompts the player to pick a valid choice.
+        
+        - options is a list of choices given to the player
+        - message is a description of the choice to be made
+        - cancel is whether or not an option to cancel the choice should be available
+        
+        Returns a number corresponding to an option, or -1 if action is cancelled
+        """
+        print(message)
+        for i, a in enumerate(options, start=1):
+            print(f"{i}. {a}")
+        prompt = "Pick a number (or 'c' to cancel): " if cancel else "Pick a number: "
+        while True:  
+            choice = input(prompt)
+            if choice.lower() == 'c':
+                print(divider)
+                return None
+            if not choice.isdecimal():
+                print("Invalid input")
+                continue
+            index = int(choice) - 1
+            if 0 <= index < len(options):
+                print(divider)
+                return options[index]
