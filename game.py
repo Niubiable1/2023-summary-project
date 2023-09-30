@@ -230,62 +230,6 @@ Methods
         next_room.take_char(player)
         self.update()
 
-    def sova(self, choice: int) -> None:
-        """
-        takes in a chosen room as a number
-        return creature presence and orb presence in a room adjacent to the player's
-        """
-        current_room = self.map.locate_char(self.player.name)
-        paths = current_room.paths()
-        room = self.map.get_room(paths[choice])
-        ustatus = room.has_char("Creature")
-        ostatus = room.has_obj("Orb")
-        if ustatus and ostatus:
-            print(f"{room.name} has both utility and an orb.")
-        elif ustatus and not ostatus:
-            print(f"{room.name} has utility.")
-        elif not ustatus and ostatus:
-            print(f"{room.name} has an orb.")
-        else:
-            print(f"{room.name} is empty.")
-        self.player.get_ability().reset()
-
-    def omen(self, choice: int) -> None:
-        """
-        takes in a chosen room as a number
-        moves player to chosen room
-        triggers update
-        """
-        current_room = self.map.locate_char(self.player.name)
-        reyna_room = self.map.locate_char(self.reyna.name)
-        next_room = self.map.get_room(self.map.room_names()[choice])
-        player = current_room.give_char(self.player.name)
-        next_room.take_char(player)
-        self.player.get_ability().reset()
-        self.update()
-
-    def sage(self, choice: int) -> None:
-        """
-        takes in choice of room as a number
-        removes path between current room and chosen room permanently
-        """
-        current_room = self.map.locate_char(self.player.name)
-        paths = current_room.paths()
-        blocked = paths[choice]
-        paths.remove(blocked)
-        # TODO: encapsulate path blocking
-        current_room._paths = paths
-
-        temp = self.map.get_room(blocked)
-        paths = temp.paths()
-        paths.remove(current_room.name)
-        # TODO: encapsulate path blocking
-        temp._paths = paths
-
-        self.player.get_ability().reset()
-        print(f"{blocked} is successfully blocked.")
-        print(divider)
-
     def move(self, choice: int) -> int:
         """
         takes in a chosen room as a number
@@ -293,7 +237,7 @@ Methods
         """
         current_room = self.map.locate_char(self.player.name)
         reyna_room = self.map.locate_char(self.reyna.name)
-        next_room = current_room.paths()[choice]
+        next_room = self.map.get_room(current_room.paths()[choice])
         player = current_room.give_char(self.player.name)
         next_room.take_char(player)
 
