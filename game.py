@@ -36,8 +36,6 @@ Methods
 --------------------------------------------
 + intro() -> None
 + countdown() -> None
-+ self.agent_select(choice: int) -> str
-+ self.map_select(choice: int) -> None
 + self.initialise(agent_name: str) -> None
 + self.desc() -> None:
 + self.use_active_ability() -> None
@@ -74,20 +72,6 @@ Methods
         print("GAME STARTS NOW!!!!")
         time.sleep(1)
         print(text.divider)
-
-    def agent_select(self, choice: int) -> str:
-        """Takes in choice of agent as a number
-        return agent name as string
-        """
-        agent_names = ["jett", "sova", "omen", "sage"]
-        return agent_names[choice]
-
-    def map_select(self, choice: str) -> None:
-        """
-        takes in choice of map
-        makes map 
-        """
-        self.map = maps.make_map(choice)
 
     def initialise(self, agent_name: str) -> None:
         """Scatters orbs and creatures through the map
@@ -240,13 +224,12 @@ Methods
             self.agent_descriptions,
             cancel=False
         )
-        self.map_select(
-            text.prompt_valid_choice(
-                self.maps,
-                "Choose a map",
-                cancel=False
-            )
+        choice = text.prompt_valid_choice(
+            self.maps,
+            "Choose a map",
+            cancel=False
         )
+        self.map = maps.make_map(choice)
         self.initialise(agent_name)
         self.countdown()
 
