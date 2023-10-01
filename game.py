@@ -35,22 +35,18 @@ An object containing attributes related to the player
 
 Methods
 --------------------------------------------
-+ self.intro(self) -> None:
-+ self.countdown(self) -> None:
-+ self.prompt(self, options: list, message: str, cancel: bool) -> int:
-+ self.agent_select(self, choice: int) -> str:
-+ self.map_select(self, choice: int) -> None:
-+ self.initialise(self, agent_name: str) -> None:
-+ self.desc(self) -> None:
-+ self.use_active_ability(self) -> None:
-- self.jett(self) -> None:
-- self.sova(self, choice: int) -> None:
-- self.omen(self, choice: int) -> None:
-- self.sage(self, choice: int) -> None:
-+ self.move(self, choice: int) -> int:
-+ self.reyna_turn(self) -> None:
-+ self.update(self) -> None:
-+ self.run(self):
++ intro() -> None
++ countdown() -> None
++ self.agent_select(choice: int) -> str
++ self.map_select(choice: int) -> None
++ self.initialise(agent_name: str) -> None
++ self.desc() -> None:
++ self.use_active_ability() -> None
++ self trigger_passive_ability() -> None
++ self.move(choice: int) -> int
++ self.reyna_turn() -> None
++ self.update() -> None
++ self.run()
     """
 
     def __init__(self):
@@ -79,34 +75,6 @@ Methods
         print("GAME STARTS NOW!!!!")
         time.sleep(1)
         print(divider)
-
-    def prompt(self, options: list, message: str, cancel: bool) -> int:
-        """Takes input from the player to pass on to other methods
-        
-        - options is a list of choices given to the player
-        - message is a description of the choice to be made
-        - cancel is whether or not an option to cancel the choice should be available
-        
-        Returns a number corresponding to an option, or -1 if action is cancelled
-        """
-        print(message)
-        for i, a in enumerate(options):
-            print(f"[{i+1}]: {a}")
-        if cancel:
-            print(f"[{len(options)+1}]: Cancel action")
-        if cancel:
-            accept = [str(x) for x in range(1, len(options) + 2)]
-        else:
-            accept = [str(x) for x in range(1, len(options) + 1)]
-        choice = input("Pick a number: ")
-        while choice not in accept:
-            print("Invalid input")
-            choice = input("Pick a number: ")
-        print(divider)
-        if int(choice) == len(options) + 1:
-            return -1
-        else:
-            return int(choice) - 1
 
     def agent_select(self, choice: int) -> str:
         """Takes in choice of agent as a number
