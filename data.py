@@ -13,9 +13,15 @@ class Character:
     Attribrute:
     name: str
     hp: int
+
+    Methods:
+    is_dead() -> bool
     """
     name: str
     hp: int
+
+    def is_dead(self) -> bool:
+        return self.hp <= 0
 
 
 class Object:
