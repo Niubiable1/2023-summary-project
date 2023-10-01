@@ -174,12 +174,12 @@ Methods
         if choice:
             ability_.use(self.player.name, self.map, current_room, choice)
 
-    def move(self, choice: int) -> int:
+    def move(self, choice: str) -> None:
         """Takes in a chosen room as a number
         moves player to chosen room
         """
         current_room = self.map.locate_char(self.player.name)
-        next_room = self.map.get_room(current_room.paths()[choice])
+        next_room = self.map.get_room(choice)
         player = current_room.give_char(self.player.name)
         next_room.take_char(player)
 
@@ -187,11 +187,10 @@ Methods
         """Moves reyna to a room adjacent to her current
         room randomly
         """
-        current_room = self.map.locate_char(self.player.name)
         reyna_room = self.map.locate_char(self.reyna.name)
         paths = reyna_room.paths()
         next_room = self.map.get_room(random.choice(paths))
-        reyna = current_room.give_char(self.reyna.name)
+        reyna = reyna_room.give_char(self.reyna.name)
         next_room.take_char(reyna)
 
     def update(self) -> None:
