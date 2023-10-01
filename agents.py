@@ -89,15 +89,17 @@ class Sage(Agent):
         return self._abilities[0]
 
 
+SELECT = {
+    "Jett": Jett,
+    "Sova": Sova,
+    "Omen": Omen,
+    "Sage": Sage,
+}
+
+
 def create(name: str, hp: int) -> Agent:
-    name = name.lower()
-    if name == "jett":
-        return Jett(hp)
-    if name == "sova":
-        return Sova(hp)
-    if name == "omen":
-        return Omen(hp)
-    if name == "sage":
-        return Sage(hp)
+    if name in SELECT:
+        return SELECT[name](hp)
     raise ValueError(f"{name}: invalid agent name")
-    
+
+

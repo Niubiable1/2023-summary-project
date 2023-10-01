@@ -57,9 +57,6 @@ Methods
         """
         print(text.intro)
 
-    agent_descriptions = text.agent
-
-    agent_names = ["Jett", "Sova", "Omen", "Sage"]
     maps = ["Ascent", "Haven", "Bind"]
 
     def countdown(self) -> None:
@@ -220,12 +217,12 @@ Methods
         """run the game"""
         self.intro()
         agent_name = text.prompt_valid_choice(
-            self.agent_names,
-            self.agent_descriptions,
+            agents.SELECT.keys(),
+            text.agent,
             cancel=False
         )
         choice = text.prompt_valid_choice(
-            self.maps,
+            maps.available,
             "Choose a map",
             cancel=False
         )
