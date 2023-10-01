@@ -10,7 +10,6 @@ import enemy
 import maps
 import objects
 import text
-from text import divider, intro, agent, victory, defeat, timeout
 
 
 class Game:
@@ -58,9 +57,9 @@ Methods
         """Print intro message, instructions, etc.
         returns nothing 
         """
-        print(intro)
+        print(text.intro)
 
-    agent_descriptions = agent
+    agent_descriptions = text.agent
 
     agent_names = ["Jett", "Sova", "Omen", "Sage"]
     maps = ["Ascent", "Haven", "Bind"]
@@ -74,7 +73,7 @@ Methods
             time.sleep(1)
         print("GAME STARTS NOW!!!!")
         time.sleep(1)
-        print(divider)
+        print(text.divider)
 
     def agent_select(self, choice: int) -> str:
         """Takes in choice of agent as a number
@@ -143,7 +142,7 @@ Methods
             print(
                 f"{self.player.get_ability().timer} turns until you can use your ability."
             )
-        print(divider)
+        print(text.divider)
 
     def use_active_ability(self) -> None:
         """Uses the player's ability based on
@@ -296,9 +295,9 @@ Methods
                 self.update()
             self.roundsleft = self.roundsleft - 1
             if self.roundsleft == 0:
-                print(timeout)
+                print(text.timeout)
                 break
         if self.win:
-            print(victory)
+            print(text.victory)
         else:
-            print(defeat)
+            print(text.defeat)
