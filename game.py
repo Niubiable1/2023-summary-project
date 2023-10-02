@@ -48,7 +48,6 @@ class Game:
     """
 
     def __init__(self):
-        self.gameover = False
         self.roundsleft = 50
         self.win = False
 
@@ -175,7 +174,6 @@ class Game:
                 f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
             )
         if player.is_dead():
-            self.gameover = True
             if isinstance(creature, enemy.Boss):
                 print(
                     "Reyna annihilates you before you can even register her presence."
@@ -184,7 +182,6 @@ class Game:
                 print("Unfortunately, it was enough to kill you.\n")
         else:
             self.win = True
-            self.gameover = True
             print("Somehow, you manage to win the gunfight.")
 
     def interact(self, player: agents.Agent, object: data.Object) -> None:
@@ -280,7 +277,7 @@ class Game:
         self.initialise(agent_name)
         self.countdown()
 
-        while self.roundsleft and not self.gameover:
+        while not self.gameover(agent_name):
             for room, char_name in self.map.all_chars():
                 # Take character out of room to avoid applying effects to itself
                 character = room.give_char(char_name)
@@ -298,10 +295,21 @@ class Game:
                 self.update(character, room)
                 room.take_char(character)
             self.roundsleft -= 1
-            if self.roundsleft == 0:
-                print(text.timeout)
         # Game over
+        if self.roundsleft == 0:
+            print(text.timeout)
         if self.win:
             print(text.victory)
         else:
             print(text.defeat)
+
+    def gameover(self, name: str) -> bool:
+        player = self.map.locate_char(name)
+        assert isinstance(player, agents.Agent)
+        if player.is_dead():
+            return True
+        reyna = self.map.locate_char("Reyna")
+        assert isinstance(reyna, enemy.Boss)
+        if reyna.is_dead():
+            return True
+        return self.roundsleft == 0
