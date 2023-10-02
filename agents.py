@@ -1,5 +1,7 @@
 import ability
+import action
 import data
+import text
 
 
 class Agent(data.Character):
@@ -39,6 +41,30 @@ class Agent(data.Character):
 
     def injure(self, amt: int) -> None:
         self.hp -= amt
+
+    def select_action(self, room: data.Room) -> action.Action | None:
+        """Prompt the user to select an action.
+        Return the chosen action.
+        """
+        choice = text.prompt_valid_choice(
+            ["Move", "Stay", "Ability"],
+            "You can do the following: ",
+            cancel=False
+        )
+        if choice == "Move":
+            choice = text.prompt_valid_choice(
+                room.paths(),
+                "Where do you want to go?",
+                cancel=True
+            )
+            if not choice:
+                return None
+            return action.Move(self, {"room": choice})
+        if choice == "Stay":
+            return action.Stay(self, {"room": choice})
+        if choice == "Ability":
+            return action.UseAbility(self, {"room": choice})
+        raise ValueError(f"{choice}: invalid action")
 
     def update(self):
         for ability_ in self._abilities:

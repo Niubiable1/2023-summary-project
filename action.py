@@ -1,4 +1,3 @@
-import agents
 from data import Character
 
 
@@ -18,3 +17,6 @@ class Stay(Action):
 
 class UseAbility(Action):
     """Use the player's active ability."""
+
+class DoNothing(Action):
+    """Take no action"""

@@ -1,3 +1,6 @@
+import random
+
+import action
 import data
 
 
@@ -8,6 +11,12 @@ class Creature(data.Character):
     def __init__(self, dmg: int):
         self.dmg = dmg
 
+    def select_action(self, room: data.Room) -> action.Action | None:
+        """Prompt the user to select an action.
+        Return the chosen action.
+        """
+        return action.DoNothing(self, {"room": choice})
+
 
 class Boss(data.Character):
     """Represents a boss to be defeated"""
@@ -15,3 +24,8 @@ class Boss(data.Character):
         self.name = name
         self.hp = hp
         self.dmg = dmg
+
+    def select_action(self, room: data.Room) -> action.Action | None:
+        """Decide on and return an action."""
+        next_room = random.choice(room.paths())
+        return action.Move(self, {"room": next_room})

@@ -215,36 +215,15 @@ class Game:
         if isinstance(character, enemy.Boss):
             return self.reyna_select(character, room)
 
-    def user_select(self, player: agents.Agent, current_room: data.Room) -> action.Action | None:
+    def user_select(self, player: agents.Agent, room: data.Room) -> action.Action | None:
         """Prompt the user to select an action.
         Return the chosen action.
         """
-        choice = text.prompt_valid_choice(
-            ["Move", "Stay", "Ability"],
-            "You can do the following: ",
-            cancel=False
-        )
-        if choice == "Move":
-            choice = text.prompt_valid_choice(
-                current_room.paths(),
-                "Where do you want to go?",
-                cancel=True
-            )
-            if not choice:
-                return None
-            return action.Move(player, {"room": choice})
-        if choice == "Stay":
-            return action.Stay(player, {"room": choice})
-        if choice == "Ability":
-            return action.UseAbility(player, {"room": choice})
-        raise ValueError(f"{choice}: invalid action")
+        return player.select_action(room)
 
-    def reyna_select(self, character: data.Character, current_room: data.Room) -> action.Action:
+    def reyna_select(self, character: enemy.Boss, room: data.Room) -> action.Action:
         """Select a move for Reyna"""
-        reyna_room = self.map.locate_char(character.name)
-        paths = reyna_room.paths()
-        next_room = self.map.get_room(random.choice(paths))
-        return action.Move(character, {"room": next_room})
+        character.select_action(room)
 
     def do_action(self, choice: action.Action | None) -> bool:
         """Carry out the effects of the chosen action.
