@@ -42,6 +42,7 @@ class Game:
     + handle_interaction(room) -> None
     + select_action(character, room) -> Action
     + do_action(action) -> bool
+    + take_turn(character) -> bool
     + update() -> None
     + run() -> None
     """
@@ -234,6 +235,19 @@ class Game:
             return False
         raise TypeError(f"{choice}: unhandled action")
 
+    def take_turn(self, character: data.Character, room: data.Room) -> bool:
+        """Handle character's turn.
+        Return True if turn is over, else False
+        """
+        raise NotImplementedError
+        if isinstance(character, agents.Agent):
+            self.desc(character)
+        if isinstance(character, action.Actor):
+            choice = self.select_action(character, room)
+            end_turn = self.do_action(choice)
+            return end_turn
+        return True
+
     def update(self, character: data.Character, room: data.Room) -> None:
         """
         adjust player hp based on presence of orbs, 
@@ -248,19 +262,6 @@ class Game:
         # Should test
         self.handle_encounter(character, room)
         self.handle_interaction(character, room)
-
-    def take_turn(self, character: data.Character, room: data.Room) -> bool:
-        """Handle character's turn.
-        Return True if turn is over, else False
-        """
-        raise NotImplementedError
-        if isinstance(character, agents.Agent):
-            self.desc(character)
-        if isinstance(character, action.Actor):
-            choice = self.select_action(character, room)
-            end_turn = self.do_action(choice)
-            return end_turn
-        return True
 
     def run(self):
         """run the game"""
