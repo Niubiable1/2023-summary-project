@@ -126,35 +126,36 @@ Methods
             )
         print(text.divider)
 
-    def use_active_ability(self) -> None:
+    def use_active_ability(self, player: agents.Agent, room: data.Room) -> None:
         """Uses the player's ability based on
         the agent they selected
         """
-        current_room = self.map.locate_char(self.player.name)
-        ability_ = self.player.get_ability()
+        if not isinstance(player, agents.Agent):
+            return
+        room = self.map.locate_char(player.name)
+        ability_ = player.get_ability()
         if not ability_.is_active():
             print("{ability_.name} cannot be manually activated\n")
             return
         if not ability_.is_charged():
             print("ABILITY NOT READY YET!")
             return
-        choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+        choice = ability_.prompt_choice(player.name, self.map, room)
         if choice:
-            ability_.use(self.player.name, self.map, current_room, choice)
+            ability_.use(player.name, self.map, room, choice)
             
-    def trigger_passive_ability(self) -> None:
+    def trigger_passive_ability(self, player: agents.Agent, room: data.Room) -> None:
         """Triggers the player's ability based on
         the agent they selected
         """
-        current_room = self.map.locate_char(self.player.name)
-        ability_ = self.player.get_ability()
+        ability_ = player.get_ability()
         if not ability_.is_passive():
             return
         if not ability_.is_charged():
             return
-        choice = ability_.prompt_choice(self.player.name, self.map, current_room)
+        choice = ability_.prompt_choice(player.name, self.map, room)
         if choice:
-            ability_.use(self.player.name, self.map, current_room, choice)
+            ability_.use(player.name, self.map, room, choice)
 
     def move(self, character: data.Character, choice: str) -> None:
         """Takes in a chosen room as a number
@@ -218,20 +219,20 @@ Methods
             object = room.give_obj(obj)
             self.interact(self.player, object)
 
-    def update(self) -> None:
+    def update(self, character: data.Character) -> None:
         """
         adjust player hp based on presence of orbs, 
         creatures, and reyna.
         Triggers any passive abilities.
         returns None
         """
-        current_room = self.map.locate_char(self.player.name)
+        room = self.map.locate_char(character.name)
         # Trigger any passive abilities, if valid
-        self.trigger_passive_ability()
+        self.trigger_passive_ability(character, room)
         # Jett should have escaped by now, if he can use his ability
         # Should test
-        self.handle_encounter(current_room)
-        self.handle_interaction(current_room)
+        self.handle_encounter(room)
+        self.handle_interaction(room)
 
     def select_action(self, character: data.Character, room: data.Room) -> action.Action | None:
         if isinstance(character, agents.Agent):
@@ -258,9 +259,9 @@ Methods
                 return None
             return action.Move(player, {"room": choice})
         if choice == "Stay":
-            return action.Stay(player, {"room": current_choice})
+            return action.Stay(player, {"room": choice})
         if choice == "Ability":
-            return action.UseAbility(player)
+            return action.UseAbility(player, {"room": choice})
         raise ValueError(f"{choice}: invalid action")
 
     def reyna_select(self, character: data.Character, current_room: data.Room) -> action.Action:
@@ -286,7 +287,7 @@ Methods
             return True
         if isinstance(choice, action.UseAbility):
             if isinstance(choice.character, agents.Agent):
-                self.use_active_ability()
+                self.use_active_ability(choice.character, choice.data["room"])
             elif isinstance(choice.character, enemy.Boss):
                 print(f"{choice.character.name} has no abilities")
             return False
@@ -309,28 +310,21 @@ Methods
         self.initialise(agent_name)
         self.countdown()
 
-        while not self.gameover:
-            current_room = self.map.locate_char(self.player.name)
-            self.desc()
-            choice = self.select_action(self.player, current_room)
-            is_turn = self.do_action(choice)
-            if not is_turn:
-                # Player gets another turn
-                continue
-            self.player.update()
-            self.update()
-            if self.gameover:
-                break
+        while self.roundsleft and not self.gameover:
+            for character in [self.player, self.reyna]:
                 
-            reyna_room = self.map.locate_char(self.reyna.name)
-            choice = self.select_action(self.reyna, reyna_room)
-            is_turn = self.do_action(choice)
-            self.reyna.update()
-            self.update()
+                end_turn = False
+                while not end_turn:
+                    room = self.map.locate_char(character.name)
+                    self.desc()
+                    choice = self.select_action(character, room)
+                    end_turn = self.do_action(choice)
+                character.update()
+                self.update(character, room)
             self.roundsleft -= 1
             if self.roundsleft == 0:
                 print(text.timeout)
-                break
+
         if self.win:
             print(text.victory)
         else:
