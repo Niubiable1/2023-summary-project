@@ -10,18 +10,25 @@ class Character:
     """
     Base class for characters in the game.
 
-    Attribrute:
-    name: str
-    hp: int
+    Attributes
+    ----------
+    + name: str
+    + hp: int
 
-    Methods:
-    is_dead() -> bool
+    Methods
+    -------
+    + is_dead() -> bool
+    + update() -> None
+      Called at the end of each turn
     """
     name: str
     hp: int
 
     def is_dead(self) -> bool:
         return self.hp <= 0
+
+    def update(self) -> None:
+        pass
 
 
 class Object:

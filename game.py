@@ -233,6 +233,12 @@ Methods
         self.handle_encounter(current_room)
         self.handle_interaction(current_room)
 
+    def select_action(self, character: data.Character, room: data.Room) -> action.Action | None:
+        if isinstance(character, agents.Agent):
+            return self.user_select(character, room)
+        if isinstance(character, enemy.Boss):
+            return self.reyna_select(character, room)
+
     def user_select(self, player: agents.Agent, current_room: data.Room) -> action.Action | None:
         """Prompt the user to select an action.
         Return the chosen action.
@@ -252,7 +258,7 @@ Methods
                 return None
             return action.Move(player, {"room": choice})
         if choice == "Stay":
-            return action.Stay(player)
+            return action.Stay(player, {"room": current_choice})
         if choice == "Ability":
             return action.UseAbility(player)
         raise ValueError(f"{choice}: invalid action")
@@ -263,6 +269,28 @@ Methods
         paths = reyna_room.paths()
         next_room = self.map.get_room(random.choice(paths))
         return action.Move(character, {"room": next_room})
+
+    def do_action(self, choice: action.Action | None) -> bool:
+        """Carry out the effects of the chosen action.
+        If the actions constitute a turn, return True, otherwise False.
+        """
+        if choice is None:
+            return False
+        if isinstance(choice, action.Move):
+            self.move(choice.character, choice.data["room"])
+            return True
+        if isinstance(choice, action.Stay):
+            print(
+                f"You stay in {choice.data['room']} for this turn."
+            )
+            return True
+        if isinstance(choice, action.UseAbility):
+            if isinstance(choice.character, agents.Agent):
+                self.use_active_ability()
+            elif isinstance(choice.character, enemy.Boss):
+                print(f"{choice.character.name} has no abilities")
+            return False
+        raise TypeError(f"{choice}: unhandled action")
 
     def run(self):
         """run the game"""
@@ -284,41 +312,22 @@ Methods
         while not self.gameover:
             current_room = self.map.locate_char(self.player.name)
             self.desc()
-            choice = self.user_select(self.player, current_room)
-            if not choice:
-                continue
-            elif isinstance(choice, action.Move):
-                self.move(choice.character, choice.data["room"])
-            elif isinstance(choice, action.Stay):
-                print(
-                    f"You stay in {current_room.name} for this turn."
-                )
-            elif isinstance(choice, action.UseAbility):
-                self.use_active_ability()
+            choice = self.select_action(self.player, current_room)
+            is_turn = self.do_action(choice)
+            if not is_turn:
                 # Player gets another turn
                 continue
-            if self.gameover:
-                break
             self.player.update()
+            self.update()
             if self.gameover:
                 break
-            else:
-                self.update()
-            if self.gameover:
-                break
-            else:
-                reyna_room = self.map.locate_char(self.reyna.name)
-                choice = self.reyna_select(self.reyna, reyna_room)
-                if isinstance(choice, action.Move):
-                    self.move(choice.character, choice.data["room"])
-                elif isinstance(choice, action.Stay):
-                    print(
-                        f"You stay in {current_room.name} for this turn."
-                    )
-                    elif isinstance(choice, action.UseAbility):
-                    print(f"{character.name} has no abilities")
-                self.update()
-            self.roundsleft = self.roundsleft - 1
+                
+            reyna_room = self.map.locate_char(self.reyna.name)
+            choice = self.select_action(self.reyna, reyna_room)
+            is_turn = self.do_action(choice)
+            self.reyna.update()
+            self.update()
+            self.roundsleft -= 1
             if self.roundsleft == 0:
                 print(text.timeout)
                 break
