@@ -1,75 +1,62 @@
-import data
+# Built-in imports
 import random
-from text import divider, intro, agent, victory, defeat, timeout
 import time
 
+# Local imports
+import ability
+import action
+import agents
+import data
+import enemy
+import maps
+import objects
+import text
+
+
 class Game:
-    """
-Class that creates an instance of the game
+    """Class that creates an instance of the game
 
-Attributes
---------------------------------------------
-- self.gameover: Bool
-Whether or not the game is over
-
-- self.win: Bool
-Whether or not the player won
-
-- self.roundsleft: int
-Number of turns before game ends
-
-- self.map: dict
-A dictionary, the name of the room is the key, the room
-itself is the value
-
-- self.player: player object
-An object containing attributes related to the player
-
-- self.player_cooldown: int
-Cooldown for the player's ability
-
-- self.player_pos: room object
-the room the player is currently in
-
-- self.reyna_pos: room object
-the room the monster is currently in
-
-
-Methods
---------------------------------------------
-+ self.intro(self) -> None:
-+ self.countdown(self) -> None:
-+ self.prompt(self, options: list, message: str, cancel: bool) -> int:
-+ self.agent_select(self, choice: int) -> str:
-+ self.map_select(self, choice: int) -> None:
-+ self.initialise(self, agent: str) -> None:
-+ self.desc(self) -> None:
-+ self.ability(self) -> None:
-- self.jett(self) -> None:
-- self.sova(self, choice: int) -> None:
-- self.omen(self, choice: int) -> None:
-- self.sage(self, choice: int) -> None:
-+ self.move(self, choice: int) -> int:
-+ self.reyna_turn(self) -> None:
-+ self.update(self) -> None:
-+ self.run(self):
+    Attributes
+    ----------
+    + gameover: Bool
+      Whether or not the game is over
+    + win: Bool
+      Whether or not the player won
+    - roundsleft: int
+      Number of turns before game ends
+    - map: Map
+      A map encapsulating rooms
+    
+    Methods
+    -------
+    + intro() -> None
+    + countdown() -> None
+    + initialise(agent_name: str) -> None
+    + desc(player) -> None
+    + use_active_ability(player, room) -> None
+    + trigger_passive_ability(player, room) -> None
+    + move(character, choice: str) -> None
+    + encounter(player, creature) -> None
+    + interact(player, object) -> None
+    + handle_encounter(room) -> None
+    + handle_interaction(room) -> None
+    + select_action(character, room) -> Action
+    + do_action(action) -> bool
+    + take_turn(character) -> bool
+    + update() -> None
+    + run() -> None
     """
 
     def __init__(self):
-        self.gameover = False
         self.roundsleft = 50
         self.win = False
 
     def intro(self) -> None:
-        """
-        print intro message, instructions, etc.
+        """Print intro message, instructions, etc.
         returns nothing 
         """
-        print(intro)
+        print(text.intro)
 
-    agent_descriptions = agent
-    
-    agents = ["Jett", "Sova", "Omen", "Sage"]
     maps = ["Ascent", "Haven", "Bind"]
 
     def countdown(self) -> None:
@@ -81,294 +68,248 @@ Methods
             time.sleep(1)
         print("GAME STARTS NOW!!!!")
         time.sleep(1)
-        print(divider)
-            
-    def prompt(self, options: list, message: str, cancel: bool) -> int:
-        """
-        Takes input from the player to pass on to other methods
-        
-        - options is a list of choices given to the player
-        - message is a description of the choice to be made
-        - cancel is whether or not an option to cancel the choice should be available
-        
-        Returns a number corresponding to an option, or -1 if action is cancelled
-        """
-        print(message)
-        for i, a in enumerate(options):
-            print(f"[{i+1}]: {a}")
-        if cancel:
-            print(f"[{len(options)+1}]: Cancel action")
-        if cancel:
-            accept = [str(x) for x in range(1, len(options)+2)]
-        else:
-            accept = [str(x) for x in range(1, len(options)+1)]
-        choice = input("Pick a number: ")
-        while choice not in accept:
-            print("Invalid input")
-            choice = input("Pick a number: ")
-        print(divider)
-        if int(choice) == len(options) + 1:
-            return -1
-        else:
-            return int(choice)-1
-    
-    def agent_select(self, choice: int) -> str:
-        """
-        takes in choice of agent as a number
-        return agent name as string
-        """
-        agents = ["jett", "sova", "omen", "sage"]
-        return agents[choice]
-    
-    def map_select(self, choice: int) -> None:
-        """
-        takes in choice of map as a number
-        makes map 
-        """
-        if choice == 0:
-            self.map = data.make_map("ascent")
-        elif choice == 1:
-            self.map = data.make_map("haven")
-        elif choice == 2:
-            self.map = data.make_map("bind")
-    
-    def initialise(self, agent: str) -> None:
-        """
-        scatters orbs and creatures through the map
+        print(text.divider)
+
+    def initialise(self, agent_name: str) -> None:
+        """Scatters orbs and creatures through the map
         creates player class
         sets cooldown for player
         sets starting positions for reyna and player
         """
         creatures = 5
         orbs = 8
-        rooms = list(self.map.keys())
+        rooms = self.map.room_names()
         spawn_areas = rooms[1:-1]
-            
-        spawn_creatures = random.sample(spawn_areas, creatures)
-        for room in spawn_creatures:
-            self.map[room].set_creature(True)
-                
-        spawn_orbs = random.sample(spawn_areas, orbs)
-        for room in spawn_orbs:
-            self.map[room].set_orb(True)
-                
-        self.player = data.Player(100, agent)
-        self.player_cooldown = 0
-    
-        self.player_pos = self.map[rooms[0]]
-        self.reyna_pos = self.map[rooms[-1]]
-    
-    def desc(self) -> None:
-        """
-        describe the current room, presence of objects,
+
+        for room in random.sample(spawn_areas, creatures):
+            self.map.get_room(room).take_char(enemy. Creature(dmg=30))
+
+        for room in random.sample(spawn_areas, orbs):
+            self.map.get_room(room).take_obj(objects.Orb(buff=50))
+
+        current_room = self.map.get_room(rooms[0])
+        current_room.take_char(
+            agents.create(agent_name, hp=100)
+        )
+        reyna_room = self.map.get_room(rooms[-1])
+        reyna_room.take_char(
+            enemy.Boss("Reyna", hp=100, dmg=300)
+        )
+
+    def desc(self, player: agents.Agent) -> None:
+        """Describe the current room, presence of objects,
         available paths, current hp and ability usage options
         """
+        current_room = self.map.locate_char(player.name)
         print(f"There are {self.roundsleft} rounds left.")
-        print(f"You are in {self.player_pos.get_name()}.")
-        print(f"You have {self.player.get_hp()} hp.\n")
-    
-        if self.reyna_pos.get_name() in self.player_pos.get_paths():
-            print(f"You hear footsteps nearby...Reyna is in {self.reyna_pos.get_name()}\n.")
-            
+        print(f"You are in {current_room.name}.")
+        print(f"You have {player.hp} hp.\n")
+
+        for room_name in current_room.paths():
+            if self.map.get_room(room_name).has_char("Reyna"):
+                print(
+                    f"You hear footsteps nearby...Reyna is in {room_name}\n."
+                )
+                break
         print("You can move to the following rooms: ")
-        paths = self.player_pos.get_paths()
+        paths = current_room.paths()
         for path in paths:
             print(path)
         print()
-        if self.player_cooldown == 0:
+        if player.get_ability().is_charged():
             print("ABILITY READY!")
         else:
-            print(f"{self.player_cooldown} turns until you can use your ability.")
-        print(divider)
-    
-    def ability(self) -> None:
-        """
-        uses the player's ability based on
+            print(
+                f"{player.get_ability().timer} turns until you can use your ability."
+            )
+        print(text.divider)
+
+    def use_active_ability(self, player: agents.Agent, room: data.Room) -> None:
+        """Uses the player's ability based on
         the agent they selected
         """
-        if self.player_cooldown == 0:
-            agent = self.player.get_agent()
-            if agent == "sova":
-                choice = self.prompt(self.player_pos.get_paths(), "You can scan the following rooms: ", True)
-                if choice != -1:
-                    self.sova(choice)
-            elif agent == "omen":
-                choice = self.prompt(self.map.keys(), "You can move to the following rooms: ", True)
-                if choice != -1:
-                    self.omen(choice)
-            elif agent == "sage":
-                choice = self.prompt(self.player_pos.get_paths(), "You can block the following rooms: ", True)
-                if choice != -1:
-                    self.sage(choice)
-            else:
-                print("Jett's ability cannot be manually activated\n")
-        else:
+        if not isinstance(player, agents.Agent):
+            return
+        room = self.map.locate_char(player.name)
+        ability_ = player.get_ability()
+        if not ability_.is_active():
+            print("{ability_.name} cannot be manually activated\n")
+            return
+        if not ability_.is_charged():
             print("ABILITY NOT READY YET!")
-    
-    def jett(self) -> None:
+            return
+        choice = ability_.prompt_choice(player.name, self.map, room)
+        if choice:
+            ability_.use(player.name, self.map, room, choice)
+            
+    def trigger_passive_ability(self, player: agents.Agent, room: data.Room) -> None:
+        """Triggers the player's ability based on
+        the agent they selected
         """
-        if player is about to die, moves player
-        to an adjacent room of the player's choice
-        and avoid death
+        ability_ = player.get_ability()
+        if not ability_.is_passive():
+            return
+        if not ability_.is_charged():
+            return
+        choice = ability_.prompt_choice(player.name, self.map, room)
+        if choice:
+            ability_.use(player.name, self.map, room, choice)
+
+    def move(self, character: data.Character, choice: str) -> None:
+        """Takes in a chosen room as a number
+        moves player to chosen room
         """
-        paths = self.player_pos.get_paths()
-        outcome = random.choice(paths)
-        print("You were about to die. You used dash to escape.")
-        print(f"You are now in {outcome}.")
-        self.player_cooldown = 999
-        self.player_pos = self.map[outcome]
-        self.update()
-    
-    def sova(self, choice: int) -> None:
-        """
-        takes in a chosen room as a number
-        return creature presence and orb presence in a room adjacent to the player's
-        """
-        paths = self.player_pos.get_paths()
-        room = self.map[paths[choice]]
-        ustatus = room.has_creature()
-        ostatus = room.has_orb()
-        if ustatus == True and ostatus == True:
-            print(f"{room.get_name()} has both utility and an orb.")
-        elif ustatus == True and ostatus == False:
-            print(f"{room.get_name()} has utility.")
-        elif ustatus == False and ostatus == True:
-            print(f"{room.get_name()} has an orb.")
+        current_room = self.map.locate_char(character.name)
+        next_room = self.map.get_room(choice)
+        current_room.give_char(character.name)
+        next_room.take_char(character)
+
+    def encounter(self, player: agents.Agent, creature: data.Character) -> None:
+        """Apply effects of interacting creature"""
+        if isinstance(creature, enemy.Boss):
+            print(f"\n{creature.name} has found you!")
+        player.injure(creature.dmg)
+        if isinstance(creature, enemy.Creature):
+            print(
+                f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
+            )
+        if player.is_dead():
+            if isinstance(creature, enemy.Boss):
+                print(
+                    "Reyna annihilates you before you can even register her presence."
+                )
+            elif isinstance(creature, enemy.Creature):
+                print("Unfortunately, it was enough to kill you.\n")
         else:
-            print(f"{room.get_name()} is empty.")
-        self.player_cooldown = 2
-    
-    def omen(self, choice: int) -> None:
+            self.win = True
+            print("Somehow, you manage to win the gunfight.")
+
+    def interact(self, player: agents.Agent, object: data.Object) -> None:
+        """Apply effects of interacting with object"""
+        if isinstance(object, objects.Orb):
+            print(f"There is a shield orb in this room, you gain {object.buff} hp.\n")
+            player.buff(object.buff)
+
+    def handle_encounter(self, player: agents.Agent, room: data.Room) -> None:
+        """Process any encounters between characters in the room."""
+        # Player should have been removed from room first
+        for char in room.characters():
+            # Creature is removed from room
+            # TODO: Need to add back if creature is not dead
+            creature = room.give_char(char)
+            self.encounter(player, creature)
+
+    def handle_interaction(self, player: agents.Agent, room: data.Room) -> None:
+        """Process any interactions between player and objects in the room."""
+        for obj in room.objects():
+            object = room.give_obj(obj)
+            self.interact(player, object)
+
+    def select_action(self, actor: action.Actor, room: data.Room) -> action.Action | None:
+        if not isinstance(actor, action.Actor):
+            return 
+        return actor.select_action(room)
+
+    def do_action(self, choice: action.Action | None) -> bool:
+        """Carry out the effects of the chosen action.
+        If the actions constitute a turn, return True, otherwise False.
         """
-        takes in a chosen room as a number
-        moves player to chosen room
-        triggers update
+        if choice is None:
+            return False
+        if isinstance(choice, action.Move):
+            self.move(choice.character, choice.data["room"])
+            return True
+        if isinstance(choice, action.Stay):
+            print(
+                f"You stay in {choice.data['room']} for this turn."
+            )
+            return True
+        if isinstance(choice, action.UseAbility):
+            if isinstance(choice.character, agents.Agent):
+                self.use_active_ability(choice.character, choice.data["room"])
+            elif isinstance(choice.character, enemy.Boss):
+                print(f"{choice.character.name} has no abilities")
+            return False
+        raise TypeError(f"{choice}: unhandled action")
+
+    def take_turn(self, character: data.Character, room: data.Room) -> bool:
+        """Handle character's turn.
+        Return True if turn is over, else False
         """
-        room = self.map[list(self.map.keys())[choice]]
-        self.player_pos = room
-        self.player_cooldown = 5
-        self.update()
-    
-    def sage(self, choice: int) -> None:
-        """
-        takes in choice of room as a number
-        removes path between current room and chosen room permanently
-        """
-        paths = self.player_pos.get_paths()
-        blocked = paths[choice]
-        paths.remove(blocked)
-        self.player_pos.set_paths(paths)
-    
-        temp = self.map[blocked]
-        paths = temp.get_paths()
-        paths.remove(self.player_pos.get_name())
-        temp.set_paths(paths)
-        
-        self.player_cooldown = 3
-        print(f"{blocked} is successfully blocked.")
-        print(divider)
-    
-    def move(self, choice: int) -> int:
-        """
-        takes in a chosen room as a number
-        moves player to chosen room
-        """
-        room = self.player_pos.get_paths()[choice]
-        self.player_pos = self.map[room]
-    
-    def reyna_turn(self) -> None:
-        """
-        Moves reyna to a room adjacent to her current
-        room randomly
-        """
-        paths = self.reyna_pos.get_paths()
-        move = random.choice(paths)
-        self.reyna_pos = self.map[move]
-    
-    def update(self) -> None:
+        raise NotImplementedError
+        if isinstance(character, agents.Agent):
+            self.desc(character)
+        if isinstance(character, action.Actor):
+            choice = self.select_action(character, room)
+            end_turn = self.do_action(choice)
+            return end_turn
+        return True
+
+    def update(self, character: data.Character, room: data.Room) -> None:
         """
         adjust player hp based on presence of orbs, 
-        creatures, and reyna
+        creatures, and reyna.
+        Triggers any passive abilities.
         returns None
         """
-        if self.reyna_pos == self.player_pos:
-            print("\nReyna has found you!")
-            if self.player.get_hp() >= 300:
-                self.win = True
-                print("Somehow, you manage to win the gunfight.")
-                self.gameover = True
-            elif self.player.get_agent() == "jett" and self.player_cooldown == 0:
-                self.jett()
-            else:
-                self.gameover = True
-                print("Reyna annihilates you before you can even register her presence.")
-        else:
-            if self.player_pos.has_creature():
-                if self.player.get_hp() <= 30:
-                    if self.player.get_agent() == "jett" and self.player_cooldown == 0:
-                        self.jett()
-                    else:
-                        print("There is utility in this room, you lose 30 hp handling it.\n")
-                        print("Unfortunately, it was enough to kill you.\n")
-                        self.gameover = True
-                        return
-                else:
-                    print("There is utility in this room, you lose 30 hp handling it.\n")
-                    self.player.set_hp(True, False)
-                    self.player_pos.set_creature(False)
-                        
-            if self.player_pos.has_orb():
-                print("There is a shield orb in this room, you gain 50 hp.\n")
-                self.player.set_hp(False, True)
-                self.player_pos.set_orb(False)
-        
+        # Trigger any passive abilities, if valid
+        if isinstance(character, agents.Agent):
+            self.trigger_passive_ability(character, room)
+        # Jett should have escaped by now, if he can use his ability
+        # Should test
+        self.handle_encounter(character, room)
+        self.handle_interaction(character, room)
+
     def run(self):
-        """
-        run the game
-        """
+        """run the game"""
         self.intro()
-        agent = self.agent_select(self.prompt(self.agents, self.agent_descriptions, False))
-        self.map_select(self.prompt(self.maps, "Choose a map", False))
-        self.initialise(agent)
+        agent_name = text.prompt_valid_choice(
+            list(agents.SELECT.keys()),
+            text.agent,
+            cancel=False
+        )
+        choice = text.prompt_valid_choice(
+            maps.available,
+            "Choose a map",
+            cancel=False
+        )
+        self.map = maps.make_map(choice)
+        self.initialise(agent_name)
         self.countdown()
-    
-        while not self.gameover:
-            self.desc()
-            advance = False
-            while not advance:
-                action = self.prompt(["Move", "Stay", "Ability"], "You can do the following: ", False)
-                if action == 0:
-                    choice = self.prompt(self.player_pos.get_paths(), "Where do you want to go?", True)
-                    if choice == -1:
-                        pass
-                    else:
-                        self.move(choice)
-                        advance = True
-                elif action == 1:
-                    advance = True
-                    print(f"You stay in {self.player_pos.get_name()} for this turn.")
-                elif action == 2:
-                    self.ability()
-                    if self.gameover == True:
-                        break
-                    else:
-                        self.desc()
-            if self.player_cooldown != 0:
-                self.player_cooldown = self.player_cooldown - 1
-            if self.gameover == True:
-                break
-            else:
-                self.update()
-            if self.gameover == True:
-                break
-            else:
-                self.reyna_turn()
-                self.update()
-            self.roundsleft = self.roundsleft - 1
-            if self.roundsleft == 0:
-                print(timeout)
-                break
+
+        while not self.gameover(agent_name):
+            for room, char_name in self.map.all_chars():
+                # Take character out of room to avoid applying effects to itself
+                character = room.give_char(char_name)
+                # Character takes turn at least once
+                end_turn = self.take_turn(character, room)
+                while not end_turn:
+                    end_turn = self.take_turn(character, room)
+                # Character only updates once per turn
+                character.update()
+                room.take_char(character)
+            # Only update encounters and interactions
+            # after all characters have taken their turn
+            for room, char_name in self.map.all_chars():
+                character = room.give_char(char_name)
+                self.update(character, room)
+                room.take_char(character)
+            self.roundsleft -= 1
+        # Game over
+        if self.roundsleft == 0:
+            print(text.timeout)
         if self.win:
-            print(victory)
+            print(text.victory)
         else:
-            print(defeat)
+            print(text.defeat)
+
+    def gameover(self, name: str) -> bool:
+        player = self.map.locate_char(name)
+        assert isinstance(player, agents.Agent)
+        if player.is_dead():
+            return True
+        reyna = self.map.locate_char("Reyna")
+        assert isinstance(reyna, enemy.Boss)
+        if reyna.is_dead():
+            return True
+        return self.roundsleft == 0
