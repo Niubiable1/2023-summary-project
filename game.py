@@ -231,6 +231,24 @@ Methods
         self.handle_encounter(current_room)
         self.handle_interaction(current_room)
 
+    def user_select(self, current_room: data.Room) -> str:
+        """Prompt the user to select an action.
+        Return the chosen action.
+        """
+        action = text.prompt_valid_choice(
+            ["Move", "Stay", "Ability"],
+            "You can do the following: ",
+            cancel=False
+        )
+        if action == "Move":
+            choice = text.prompt_valid_choice(
+                current_room.paths(),
+                "Where do you want to go?",
+                cancel=True
+            )
+            return choice
+        return action
+
     def run(self):
         """run the game"""
         self.intro()
@@ -253,33 +271,24 @@ Methods
             self.desc()
             advance = False
             while not advance:
-                action = text.prompt_valid_choice(
-                    ["Move", "Stay", "Ability"],
-                    "You can do the following: ",
-                    cancel=False
-                )
-                if action == "Move":
-                    choice = text.prompt_valid_choice(
-                        current_room.paths(),
-                        "Where do you want to go?",
-                        cancel=True
-                    )
-                    if not choice:
-                        pass
-                    else:
-                        self.move(choice)
-                        advance = True
-                elif action == "Stay":
+                action = self.user_select(current_room)
+                if action == "Stay":
                     advance = True
                     print(
                         f"You stay in {current_room.name} for this turn."
                     )
                 elif action == "Ability":
                     self.use_active_ability()
-                    if self.gameover:
-                        break
+                else:  # Move
+                    if not choice:
+                        pass
                     else:
-                        self.desc()
+                        advance = True
+                        self.move(choice)
+            if self.gameover:
+                break
+            else:
+                self.desc()
             self.player.update()
             if self.gameover:
                 break
