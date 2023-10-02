@@ -4,6 +4,7 @@ import time
 
 # Local imports
 import ability
+import action
 import agents
 import data
 import enemy
@@ -231,23 +232,29 @@ Methods
         self.handle_encounter(current_room)
         self.handle_interaction(current_room)
 
-    def user_select(self, current_room: data.Room) -> str:
+    def user_select(self, current_room: data.Room) -> action.Action | None:
         """Prompt the user to select an action.
         Return the chosen action.
         """
-        action = text.prompt_valid_choice(
+        choice = text.prompt_valid_choice(
             ["Move", "Stay", "Ability"],
             "You can do the following: ",
             cancel=False
         )
-        if action == "Move":
+        if choice == "Move":
             choice = text.prompt_valid_choice(
                 current_room.paths(),
                 "Where do you want to go?",
                 cancel=True
             )
-            return choice
-        return action
+            if not choice:
+                return None
+            return action.Move({"room": choice})
+        if choice == "Stay":
+            return action.Stay()
+        if choice == "Ability":
+            return action.UseAbility()
+        raise ValueError(f"{choice}: invalid action")
 
     def run(self):
         """run the game"""
@@ -268,27 +275,25 @@ Methods
 
         while not self.gameover:
             current_room = self.map.locate_char(self.player.name)
-            self.desc()
             advance = False
             while not advance:
-                action = self.user_select(current_room)
-                if action == "Stay":
+                self.desc()
+                choice = self.user_select(current_room)
+                if not choice:
+                    break
+                elif isinstance(choice, action.Move):
+                    advance = True
+                    self.move(choice.data["room"])
+                elif isinstance(choice, action.Stay):
                     advance = True
                     print(
                         f"You stay in {current_room.name} for this turn."
                     )
-                elif action == "Ability":
+                elif isinstance(choice, action.UseAbility):
                     self.use_active_ability()
-                else:  # Move
-                    if not choice:
-                        pass
-                    else:
-                        advance = True
-                        self.move(choice)
+            # TODO: Use Action pattern for Reyna?
             if self.gameover:
                 break
-            else:
-                self.desc()
             self.player.update()
             if self.gameover:
                 break
