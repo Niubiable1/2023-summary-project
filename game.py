@@ -283,23 +283,20 @@ Methods
 
         while not self.gameover:
             current_room = self.map.locate_char(self.player.name)
-            advance = False
-            while not advance:
-                self.desc()
-                choice = self.user_select(self.player, current_room)
-                if not choice:
-                    break
-                elif isinstance(choice, action.Move):
-                    advance = True
-                    self.move(choice.character, choice.data["room"])
-                elif isinstance(choice, action.Stay):
-                    advance = True
-                    print(
-                        f"You stay in {current_room.name} for this turn."
-                    )
-                elif isinstance(choice, action.UseAbility):
-                    self.use_active_ability()
-            # TODO: Use Action pattern for Reyna?
+            self.desc()
+            choice = self.user_select(self.player, current_room)
+            if not choice:
+                continue
+            elif isinstance(choice, action.Move):
+                self.move(choice.character, choice.data["room"])
+            elif isinstance(choice, action.Stay):
+                print(
+                    f"You stay in {current_room.name} for this turn."
+                )
+            elif isinstance(choice, action.UseAbility):
+                self.use_active_ability()
+                # Player gets another turn
+                continue
             if self.gameover:
                 break
             self.player.update()
@@ -313,13 +310,13 @@ Methods
                 reyna_room = self.map.locate_char(self.reyna.name)
                 choice = self.reyna_select(self.reyna, reyna_room)
                 if isinstance(choice, action.Move):
-                    advance = True
                     self.move(choice.character, choice.data["room"])
                 elif isinstance(choice, action.Stay):
-                    advance = True
                     print(
                         f"You stay in {current_room.name} for this turn."
                     )
+                    elif isinstance(choice, action.UseAbility):
+                    print(f"{character.name} has no abilities")
                 self.update()
             self.roundsleft = self.roundsleft - 1
             if self.roundsleft == 0:
