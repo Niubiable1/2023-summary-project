@@ -174,38 +174,47 @@ Methods
         reyna = reyna_room.give_char(self.reyna.name)
         next_room.take_char(reyna)
 
-    def handle_encounter(self, room: data.Room) -> None:
-        """Process any encounters between characters in the room."""
-        if room.has_char("Reyna"):
-            reyna = room.give_char("Reyna")
-            print("\nReyna has found you!")
-            self.player.injure(reyna.dmg)
-            if self.player.is_dead():
-                print(
-                    "Reyna annihilates you before you can even register her presence."
-                )
-            else:
-                self.win = True
-                print("Somehow, you manage to win the gunfight.")
-            self.gameover = True
-            return
-        if room.has_char("Creature"):
-            creature = room.give_char("Creature")
-            self.player.injure(creature.dmg)
+    def encounter(self, player: agents.Agent, creature: data.Character) -> None:
+        """Apply effects of interacting creature"""
+        if isinstance(creature, enemy.Boss):
+            print(f"\n{creature.name} has found you!")
+        player.injure(creature.dmg)
+        if isinstance(creature, enemy.Creature):
             print(
                 f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
             )
-            if self.player.is_dead():
+        if player.is_dead():
+            self.gameover = True
+            if isinstance(creature, enemy.Boss):
+                print(
+                    "Reyna annihilates you before you can even register her presence."
+                )
+            elif isinstance(creature, enemy.Creature):
                 print("Unfortunately, it was enough to kill you.\n")
-                self.gameover = True
-                return
+        else:
+            self.win = True
+            self.gameover = True
+            print("Somehow, you manage to win the gunfight.")
+
+    def interact(self, player: agents.Agent, object: data.Object) -> None:
+        """Apply effects of interacting with object"""
+        if isinstance(object, objects.Orb):
+            print(f"There is a shield orb in this room, you gain {object.buff} hp.\n")
+            player.buff(object.buff)
+
+    def handle_encounter(self, room: data.Room) -> None:
+        """Process any encounters between characters in the room."""
+        for char in room.characters():
+            # Creature is removed from room
+            # TODO: Need to add back if creature is not dead
+            creature = room.give_char(char)
+            self.encounter(self.player, creature)
 
     def handle_interaction(self, room: data.Room) -> None:
         """Process any interactions between player and objects in the room."""
-        if room.has_obj("Orb"):
-            orb = room.give_obj("Orb")
-            print(f"There is a shield orb in this room, you gain {orb.buff} hp.\n")
-            self.player.buff(orb.buff)
+        for obj in room.objects():
+            object = room.give_obj(obj)
+            self.interact(self.player, object)
 
     def update(self) -> None:
         """
