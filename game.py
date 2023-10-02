@@ -26,15 +26,13 @@ class Game:
       Number of turns before game ends
     - map: Map
       A map encapsulating rooms
-    - player: player object
-      An object containing attributes related to the player
     
     Methods
     -------
     + intro() -> None
     + countdown() -> None
     + initialise(agent_name: str) -> None
-    + desc() -> None
+    + desc(player) -> None
     + use_active_ability(player, room) -> None
     + trigger_passive_ability(player, room) -> None
     + move(character, choice: str) -> None
@@ -83,30 +81,29 @@ class Game:
         rooms = self.map.room_names()
         spawn_areas = rooms[1:-1]
 
-        spawn_creatures = random.sample(spawn_areas, creatures)
-        for room in spawn_creatures:
+        for room in random.sample(spawn_areas, creatures):
             self.map.get_room(room).take_char(enemy. Creature(dmg=30))
 
-        spawn_orbs = random.sample(spawn_areas, orbs)
-        for room in spawn_orbs:
+        for room in random.sample(spawn_areas, orbs):
             self.map.get_room(room).take_obj(objects.Orb(buff=50))
 
-        self.player = agents.create(agent_name, hp=100)
-        self.reyna = enemy.Boss("Reyna", hp=100, dmg=300)
-
         current_room = self.map.get_room(rooms[0])
-        current_room.take_char(self.player)
+        current_room.take_char(
+            agents.create(agent_name, hp=100)
+        )
         reyna_room = self.map.get_room(rooms[-1])
-        reyna_room.take_char(self.reyna)
+        reyna_room.take_char(
+            enemy.Boss("Reyna", hp=100, dmg=300)
+        )
 
-    def desc(self) -> None:
+    def desc(self, player: agents.Agent) -> None:
         """Describe the current room, presence of objects,
         available paths, current hp and ability usage options
         """
-        current_room = self.map.locate_char(self.player.name)
+        current_room = self.map.locate_char(player.name)
         print(f"There are {self.roundsleft} rounds left.")
         print(f"You are in {current_room.name}.")
-        print(f"You have {self.player.hp} hp.\n")
+        print(f"You have {player.hp} hp.\n")
 
         for room_name in current_room.paths():
             if self.map.get_room(room_name).has_char("Reyna"):
@@ -119,11 +116,11 @@ class Game:
         for path in paths:
             print(path)
         print()
-        if self.player.get_ability().is_charged():
+        if player.get_ability().is_charged():
             print("ABILITY READY!")
         else:
             print(
-                f"{self.player.get_ability().timer} turns until you can use your ability."
+                f"{player.get_ability().timer} turns until you can use your ability."
             )
         print(text.divider)
 
@@ -195,19 +192,20 @@ class Game:
             print(f"There is a shield orb in this room, you gain {object.buff} hp.\n")
             player.buff(object.buff)
 
-    def handle_encounter(self, room: data.Room) -> None:
+    def handle_encounter(self, player: agents.Agent, room: data.Room) -> None:
         """Process any encounters between characters in the room."""
+        # Player should have been removed from room first
         for char in room.characters():
             # Creature is removed from room
             # TODO: Need to add back if creature is not dead
             creature = room.give_char(char)
-            self.encounter(self.player, creature)
+            self.encounter(player, creature)
 
-    def handle_interaction(self, room: data.Room) -> None:
+    def handle_interaction(self, player: agents.Agent, room: data.Room) -> None:
         """Process any interactions between player and objects in the room."""
         for obj in room.objects():
             object = room.give_obj(obj)
-            self.interact(self.player, object)
+            self.interact(player, object)
 
     def select_action(self, actor: action.Actor, room: data.Room) -> action.Action | None:
         if not isinstance(actor, action.Actor):
@@ -248,8 +246,8 @@ class Game:
             self.trigger_passive_ability(character, room)
         # Jett should have escaped by now, if he can use his ability
         # Should test
-        self.handle_encounter(room)
-        self.handle_interaction(room)
+        self.handle_encounter(character, room)
+        self.handle_interaction(character, room)
 
     def run(self):
         """run the game"""
@@ -276,7 +274,7 @@ class Game:
                     end_turn = False
                     while not end_turn:
                         this_room = self.map.locate_char(character.name)
-                        self.desc()
+                        self.desc(character)
                         choice = self.select_action(character, this_room)
                         end_turn = self.do_action(choice)
                     character.update()

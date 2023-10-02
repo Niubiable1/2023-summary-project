@@ -3,7 +3,7 @@ from data import Character, Room
 
 class Action:
     """Encapsulates the possible actions a character can take in the game"""
-    def __init__(self, actor: Actor, data=None) -> None:
+    def __init__(self, actor: "Actor", data=None) -> None:
         self.character = actor
         self.data = data
 
@@ -36,4 +36,4 @@ class Actor(Character):
     + select_action(room: Room) -> Action
     """
     def select_action(self, room: Room) -> "Action":
-        return DoNothing(self, data={"room", room}
+        return DoNothing(self, data={"room", room})
