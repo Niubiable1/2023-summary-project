@@ -1,6 +1,11 @@
+import agents
+from data import Character
+
+
 class Action:
     """Encapsulates the possible actions a character can take in the game"""
-    def __init__(self, data=None) -> None:
+    def __init__(self, character: Character, data=None) -> None:
+        self.character = character
         self.data = data
 
 class Move(Action):

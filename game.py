@@ -156,14 +156,14 @@ Methods
         if choice:
             ability_.use(self.player.name, self.map, current_room, choice)
 
-    def move(self, choice: str) -> None:
+    def move(self, character: data.Character, choice: str) -> None:
         """Takes in a chosen room as a number
         moves player to chosen room
         """
-        current_room = self.map.locate_char(self.player.name)
+        current_room = self.map.locate_char(character.name)
         next_room = self.map.get_room(choice)
-        player = current_room.give_char(self.player.name)
-        next_room.take_char(player)
+        current_room.give_char(character.name)
+        next_room.take_char(character)
 
     def reyna_turn(self) -> None:
         """Moves reyna to a room adjacent to her current
@@ -249,11 +249,11 @@ Methods
             )
             if not choice:
                 return None
-            return action.Move({"room": choice})
+            return action.Move(self.player, {"room": choice})
         if choice == "Stay":
-            return action.Stay()
+            return action.Stay(self.player)
         if choice == "Ability":
-            return action.UseAbility()
+            return action.UseAbility(self.player)
         raise ValueError(f"{choice}: invalid action")
 
     def run(self):
@@ -283,7 +283,7 @@ Methods
                     break
                 elif isinstance(choice, action.Move):
                     advance = True
-                    self.move(choice.data["room"])
+                    self.move(self.player, choice.data["room"])
                 elif isinstance(choice, action.Stay):
                     advance = True
                     print(
