@@ -4,7 +4,7 @@ import data
 import text
 
 
-class Agent(data.Character):
+class Agent(action.Actor):
     """Represents an agent in the game.
 
     Each agent has an ability which may affect the game map.
@@ -25,6 +25,7 @@ class Agent(data.Character):
     + buff(amt: int) -> None
     + get_ability() -> Ability
     + injure(amt: int) -> None
+    + select_action(room) -> Action
     + update() -> None
     """
     name: str

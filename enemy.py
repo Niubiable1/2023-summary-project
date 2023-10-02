@@ -4,7 +4,7 @@ import action
 import data
 
 
-class Creature(data.Character):
+class Creature(action.Actor):
     """Represents a creature of unknown type."""
     name = "Creature"
     hp = 30
@@ -18,7 +18,7 @@ class Creature(data.Character):
         return action.DoNothing(self, {"room": choice})
 
 
-class Boss(data.Character):
+class Boss(action.Actor):
     """Represents a boss to be defeated"""
     def __init__(self, name: str, hp: int, dmg: int):
         self.name = name

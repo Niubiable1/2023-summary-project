@@ -209,21 +209,10 @@ class Game:
             object = room.give_obj(obj)
             self.interact(self.player, object)
 
-    def select_action(self, character: data.Character, room: data.Room) -> action.Action | None:
-        if isinstance(character, agents.Agent):
-            return self.user_select(character, room)
-        if isinstance(character, enemy.Boss):
-            return self.reyna_select(character, room)
-
-    def user_select(self, player: agents.Agent, room: data.Room) -> action.Action | None:
-        """Prompt the user to select an action.
-        Return the chosen action.
-        """
-        return player.select_action(room)
-
-    def reyna_select(self, character: enemy.Boss, room: data.Room) -> action.Action:
-        """Select a move for Reyna"""
-        character.select_action(room)
+    def select_action(self, actor: action.Actor, room: data.Room) -> action.Action | None:
+        if not isinstance(actor, action.Actor):
+            return 
+        return actor.select_action(room)
 
     def do_action(self, choice: action.Action | None) -> bool:
         """Carry out the effects of the chosen action.
