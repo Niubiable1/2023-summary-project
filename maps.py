@@ -34,6 +34,13 @@ class Map:
         for name, paths in roomdata.items():
             self._rooms[name] = data.Room(name, paths, False, False)
 
+    def all_chars(self) -> list[tuple[data.Room, str]]:
+        roomchars = []
+        for room in self._rooms.values():
+            for char in room.characters():
+                roomchars.append((room, char))
+        return roomchars
+
     def room_names(self) -> list[str]:
         return list(self._rooms)
 

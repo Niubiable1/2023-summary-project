@@ -281,26 +281,22 @@ class Game:
         self.countdown()
 
         while self.roundsleft and not self.gameover:
-            for room_name in self.map.room_names():
-                room = self.map.get_room(room_name)
-                for char_name in room.characters():
-                    # Take character out of room to avoid applying effects to itself
-                    character = room.give_char(char_name)
-                    # Character takes turn at least once
+            for room, char_name in self.map.all_chars():
+                # Take character out of room to avoid applying effects to itself
+                character = room.give_char(char_name)
+                # Character takes turn at least once
+                end_turn = self.take_turn(character, room)
+                while not end_turn:
                     end_turn = self.take_turn(character, room)
-                    while not end_turn:
-                        end_turn = self.take_turn(character, room)
-                    # Character only updates once per turn
-                    character.update()
-                    room.take_char(character)
+                # Character only updates once per turn
+                character.update()
+                room.take_char(character)
             # Only update encounters and interactions
             # after all characters have taken their turn
-            for room_name in self.map.room_names():
-                room = self.map.get_room(room_name)
-                for char_name in room.characters():
-                    character = room.give_char(char_name)
-                    self.update(character, room)
-                    room.take_char(character)
+            for room, char_name in self.map.all_chars():
+                character = room.give_char(char_name)
+                self.update(character, room)
+                room.take_char(character)
             self.roundsleft -= 1
             if self.roundsleft == 0:
                 print(text.timeout)
