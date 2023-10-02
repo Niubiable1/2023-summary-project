@@ -249,6 +249,19 @@ class Game:
         self.handle_encounter(character, room)
         self.handle_interaction(character, room)
 
+    def take_turn(self, character: data.Character, room: data.Room) -> bool:
+        """Handle character's turn.
+        Return True if turn is over, else False
+        """
+        raise NotImplementedError
+        if isinstance(character, agents.Agent):
+            self.desc(character)
+        if isinstance(character, action.Actor):
+            choice = self.select_action(character, room)
+            end_turn = self.do_action(choice)
+            return end_turn
+        return True
+
     def run(self):
         """run the game"""
         self.intro()
@@ -270,19 +283,27 @@ class Game:
             for room_name in self.map.room_names():
                 room = self.map.get_room(room_name)
                 for char_name in room.characters():
+                    # Take character out of room to avoid applying effects to itself
                     character = room.give_char(char_name)
-                    end_turn = False
+                    # Character takes turn at least once
+                    end_turn = self.take_turn(character, room)
                     while not end_turn:
-                        this_room = self.map.locate_char(character.name)
-                        self.desc(character)
-                        choice = self.select_action(character, this_room)
-                        end_turn = self.do_action(choice)
+                        end_turn = self.take_turn(character, room)
+                    # Character only updates once per turn
                     character.update()
+                    room.take_char(character)
+            # Only update encounters and interactions
+            # after all characters have taken their turn
+            for room_name in self.map.room_names():
+                room = self.map.get_room(room_name)
+                for char_name in room.characters():
+                    character = room.give_char(char_name)
                     self.update(character, room)
+                    room.take_char(character)
             self.roundsleft -= 1
             if self.roundsleft == 0:
                 print(text.timeout)
-
+        # Game over
         if self.win:
             print(text.victory)
         else:
