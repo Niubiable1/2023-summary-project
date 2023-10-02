@@ -11,6 +11,7 @@ class Creature(data.Character):
 
 class Boss(data.Character):
     """Represents a boss to be defeated"""
-    def __init__(self, name: str, hp: int):
+    def __init__(self, name: str, hp: int, dmg: int):
         self.name = name
         self.hp = hp
+        self.dmg = dmg

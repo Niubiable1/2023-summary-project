@@ -90,7 +90,7 @@ Methods
             self.map.get_room(room).take_obj(objects.Orb(buff=50))
 
         self.player = agents.create(agent_name, hp=100)
-        self.reyna = enemy.Boss("Reyna", hp=100)
+        self.reyna = enemy.Boss("Reyna", hp=100, dmg=300)
 
         current_room = self.map.get_room(rooms[0])
         current_room.take_char(self.player)
@@ -174,6 +174,39 @@ Methods
         reyna = reyna_room.give_char(self.reyna.name)
         next_room.take_char(reyna)
 
+    def handle_encounter(self, room: data.Room) -> None:
+        """Process any encounters between characters in the room."""
+        if room.has_char("Reyna"):
+            reyna = room.give_char("Reyna")
+            print("\nReyna has found you!")
+            self.player.injure(reyna.dmg)
+            if self.player.is_dead():
+                print(
+                    "Reyna annihilates you before you can even register her presence."
+                )
+            else:
+                self.win = True
+                print("Somehow, you manage to win the gunfight.")
+            self.gameover = True
+            return
+        if room.has_char("Creature"):
+            creature = room.give_char("Creature")
+            self.player.injure(creature.dmg)
+            print(
+                f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
+            )
+            if self.player.is_dead():
+                print("Unfortunately, it was enough to kill you.\n")
+                self.gameover = True
+                return
+
+    def handle_interaction(self, room: data.Room) -> None:
+        """Process any interactions between player and objects in the room."""
+        if room.has_obj("Orb"):
+            orb = room.give_obj("Orb")
+            print(f"There is a shield orb in this room, you gain {orb.buff} hp.\n")
+            self.player.buff(orb.buff)
+
     def update(self) -> None:
         """
         adjust player hp based on presence of orbs, 
@@ -184,40 +217,16 @@ Methods
         current_room = self.map.locate_char(self.player.name)
         # Trigger any passive abilities, if valid
         self.trigger_passive_ability()
-
         # Jett should have escaped by now, if he can use his ability
         # Should test
-        if current_room.has_char("Reyna"):
-            print("\nReyna has found you!")
-            if self.player.hp >= 300:
-                self.win = True
-                print("Somehow, you manage to win the gunfight.")
-            else:
-                print(
-                    "Reyna annihilates you before you can even register her presence."
-                )
-            self.gameover = True
-        else:
-            if current_room.has_char("Creature"):
-                creature = current_room.give_char("Creature")
-                self.player.injure(creature.dmg)
-                print(
-                    f"There is utility in this room, you lose {creature.dmg} hp handling it.\n"
-                )
-                if self.player.hp <= 0:
-                    print("Unfortunately, it was enough to kill you.\n")
-                    self.gameover = True
-                    return
-            if current_room.has_obj("Orb"):
-                orb = current_room.give_obj("Orb")
-                print(f"There is a shield orb in this room, you gain {orb.buff} hp.\n")
-                self.player.buff(orb.buff)
+        self.handle_encounter(current_room)
+        self.handle_interaction(current_room)
 
     def run(self):
         """run the game"""
         self.intro()
         agent_name = text.prompt_valid_choice(
-            agents.SELECT.keys(),
+            list(agents.SELECT.keys()),
             text.agent,
             cancel=False
         )
