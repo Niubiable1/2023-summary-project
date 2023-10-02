@@ -170,6 +170,7 @@ Methods
         room randomly
         """
         reyna_room = self.map.locate_char(self.reyna.name)
+        self.reyna_select(self.reyna, reyna_room)
         paths = reyna_room.paths()
         next_room = self.map.get_room(random.choice(paths))
         reyna = reyna_room.give_char(self.reyna.name)
@@ -232,7 +233,7 @@ Methods
         self.handle_encounter(current_room)
         self.handle_interaction(current_room)
 
-    def user_select(self, current_room: data.Room) -> action.Action | None:
+    def user_select(self, player: agents.Agent, current_room: data.Room) -> action.Action | None:
         """Prompt the user to select an action.
         Return the chosen action.
         """
@@ -249,12 +250,19 @@ Methods
             )
             if not choice:
                 return None
-            return action.Move(self.player, {"room": choice})
+            return action.Move(player, {"room": choice})
         if choice == "Stay":
-            return action.Stay(self.player)
+            return action.Stay(player)
         if choice == "Ability":
-            return action.UseAbility(self.player)
+            return action.UseAbility(player)
         raise ValueError(f"{choice}: invalid action")
+
+    def reyna_select(self, character: data.Character, current_room: data.Room) -> action.Action:
+        """Select a move for Reyna"""
+        reyna_room = self.map.locate_char(character.name)
+        paths = reyna_room.paths()
+        next_room = self.map.get_room(random.choice(paths))
+        return action.Move(character, {"room": next_room})
 
     def run(self):
         """run the game"""
@@ -278,12 +286,12 @@ Methods
             advance = False
             while not advance:
                 self.desc()
-                choice = self.user_select(current_room)
+                choice = self.user_select(self.player, current_room)
                 if not choice:
                     break
                 elif isinstance(choice, action.Move):
                     advance = True
-                    self.move(self.player, choice.data["room"])
+                    self.move(choice.character, choice.data["room"])
                 elif isinstance(choice, action.Stay):
                     advance = True
                     print(
@@ -302,7 +310,16 @@ Methods
             if self.gameover:
                 break
             else:
-                self.reyna_turn()
+                reyna_room = self.map.locate_char(self.reyna.name)
+                choice = self.reyna_select(self.reyna, reyna_room)
+                if isinstance(choice, action.Move):
+                    advance = True
+                    self.move(choice.character, choice.data["room"])
+                elif isinstance(choice, action.Stay):
+                    advance = True
+                    print(
+                        f"You stay in {current_room.name} for this turn."
+                    )
                 self.update()
             self.roundsleft = self.roundsleft - 1
             if self.roundsleft == 0:
