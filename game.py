@@ -16,35 +16,36 @@ import text
 class Game:
     """Class that creates an instance of the game
 
-Attributes
---------------------------------------------
-- self.gameover: Bool
-Whether or not the game is over
-
-- self.win: Bool
-Whether or not the player won
-
-- self.roundsleft: int
-Number of turns before game ends
-
-- self.map: Map
-A map encapsulating rooms
-
-- self.player: player object
-An object containing attributes related to the player
-
-Methods
---------------------------------------------
-+ intro() -> None
-+ countdown() -> None
-+ self.initialise(agent_name: str) -> None
-+ self.desc() -> None:
-+ self.use_active_ability() -> None
-+ self trigger_passive_ability() -> None
-+ self.move(choice: int) -> int
-+ self.reyna_turn() -> None
-+ self.update() -> None
-+ self.run()
+    Attributes
+    ----------
+    + gameover: Bool
+      Whether or not the game is over
+    + win: Bool
+      Whether or not the player won
+    - roundsleft: int
+      Number of turns before game ends
+    - map: Map
+      A map encapsulating rooms
+    - player: player object
+      An object containing attributes related to the player
+    
+    Methods
+    -------
+    + intro() -> None
+    + countdown() -> None
+    + initialise(agent_name: str) -> None
+    + desc() -> None
+    + use_active_ability(player, room) -> None
+    + trigger_passive_ability(player, room) -> None
+    + move(character, choice: str) -> None
+    + encounter(player, creature) -> None
+    + interact(player, object) -> None
+    + handle_encounter(room) -> None
+    + handle_interaction(room) -> None
+    + select_action(character, room) -> Action
+    + do_action(action) -> bool
+    + update() -> None
+    + run() -> None
     """
 
     def __init__(self):
@@ -166,17 +167,6 @@ Methods
         current_room.give_char(character.name)
         next_room.take_char(character)
 
-    def reyna_turn(self) -> None:
-        """Moves reyna to a room adjacent to her current
-        room randomly
-        """
-        reyna_room = self.map.locate_char(self.reyna.name)
-        self.reyna_select(self.reyna, reyna_room)
-        paths = reyna_room.paths()
-        next_room = self.map.get_room(random.choice(paths))
-        reyna = reyna_room.give_char(self.reyna.name)
-        next_room.take_char(reyna)
-
     def encounter(self, player: agents.Agent, creature: data.Character) -> None:
         """Apply effects of interacting creature"""
         if isinstance(creature, enemy.Boss):
@@ -218,21 +208,6 @@ Methods
         for obj in room.objects():
             object = room.give_obj(obj)
             self.interact(self.player, object)
-
-    def update(self, character: data.Character) -> None:
-        """
-        adjust player hp based on presence of orbs, 
-        creatures, and reyna.
-        Triggers any passive abilities.
-        returns None
-        """
-        room = self.map.locate_char(character.name)
-        # Trigger any passive abilities, if valid
-        self.trigger_passive_ability(character, room)
-        # Jett should have escaped by now, if he can use his ability
-        # Should test
-        self.handle_encounter(room)
-        self.handle_interaction(room)
 
     def select_action(self, character: data.Character, room: data.Room) -> action.Action | None:
         if isinstance(character, agents.Agent):
@@ -292,6 +267,22 @@ Methods
                 print(f"{choice.character.name} has no abilities")
             return False
         raise TypeError(f"{choice}: unhandled action")
+
+    def update(self, character: data.Character) -> None:
+        """
+        adjust player hp based on presence of orbs, 
+        creatures, and reyna.
+        Triggers any passive abilities.
+        returns None
+        """
+        room = self.map.locate_char(character.name)
+        # Trigger any passive abilities, if valid
+        if isinstance(character, agents.Agent):
+            self.trigger_passive_ability(character, room)
+        # Jett should have escaped by now, if he can use his ability
+        # Should test
+        self.handle_encounter(room)
+        self.handle_interaction(room)
 
     def run(self):
         """run the game"""
