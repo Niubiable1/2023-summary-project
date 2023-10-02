@@ -236,14 +236,13 @@ class Game:
             return False
         raise TypeError(f"{choice}: unhandled action")
 
-    def update(self, character: data.Character) -> None:
+    def update(self, character: data.Character, room: data.Room) -> None:
         """
         adjust player hp based on presence of orbs, 
         creatures, and reyna.
         Triggers any passive abilities.
         returns None
         """
-        room = self.map.locate_char(character.name)
         # Trigger any passive abilities, if valid
         if isinstance(character, agents.Agent):
             self.trigger_passive_ability(character, room)
@@ -270,16 +269,18 @@ class Game:
         self.countdown()
 
         while self.roundsleft and not self.gameover:
-            for character in [self.player, self.reyna]:
-                
-                end_turn = False
-                while not end_turn:
-                    room = self.map.locate_char(character.name)
-                    self.desc()
-                    choice = self.select_action(character, room)
-                    end_turn = self.do_action(choice)
-                character.update()
-                self.update(character, room)
+            for room_name in self.map.room_names():
+                room = self.map.get_room(room_name)
+                for char_name in room.characters():
+                    character = room.give_char(char_name)
+                    end_turn = False
+                    while not end_turn:
+                        this_room = self.map.locate_char(character.name)
+                        self.desc()
+                        choice = self.select_action(character, this_room)
+                        end_turn = self.do_action(choice)
+                    character.update()
+                    self.update(character, room)
             self.roundsleft -= 1
             if self.roundsleft == 0:
                 print(text.timeout)
