@@ -1,17 +1,19 @@
+import json
+
 import data
 
 
 DATAFILE = "mapdata.json"
 
 
-mapdata = load_json(DATAFILE)
-available = list(mapdata.keys())
-
-
 def load_json(filename: str) -> dict:
     with open(filename, "r") as f:
         data = json.load(f)
     return data
+
+
+mapdata = load_json(DATAFILE)
+available = list(mapdata.keys())
 
 
 class Map:
